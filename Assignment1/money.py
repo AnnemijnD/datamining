@@ -5,53 +5,32 @@ DEZE WERKT NU EFFIES NIET MEER OMDAT DE DATABASE ANDERS IS NU
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+import clean_all_Data
 
+df = clean_all_Data.run_all()
 
+#
+# # Make df where all the money values are valid (unvalid values removed --> nog niet gekeken naar 'euros' verwijderen etc.)
+# drop_list = []
+# for index, row in df_new.iterrows():
+#     if type(row['money']) == str:
+#         drop_list.append(index)
+#     elif row['money'] < 0 or row['money'] > 100:
+#         drop_list.append(index)
+#     else:
+#         # print(type(row['money']))
+#         row['money'] = float(row['money'])
+#
+# df_money = df_new.drop(drop_list)
+#
+# print(len(drop_list))
 
-df = pd.read_excel('data/ODI-2020_cleaned.xlsx')
-
-column_dict = {'What programme are you in?': 'programme',
-            'Have you taken a course on machine learning?': 'machinelearning',
-            'Have you taken a course on information retrieval?': 'informationretrieval',
-            'Have you taken a course on statistics?': 'statistics',
-            'Have you taken a course on databases?': 'databases',
-            'What is your gender?': 'gender',
-            'Chocolate makes you.....': 'chocolate',
-            'When is your birthday (date)?': 'birthday',
-            'Number of neighbors sitting around you?': 'neighbors',
-            'Did you stand up?': 'stand',
-            'What is your stress level (0-100)?': 'stress',
-            'You can get 100 euros if you win a local DM competition, or we don’t hold any competitions and I give everyone some money (not the same amount!). How much do you think you would deserve then? ': 'money',
-            'Give a random number': 'randomnumber',
-            'Time you went to be Yesterday': 'bedtime',
-            'What makes a good day for you (1)?': 'goodday1',
-            'What makes a good day for you (2)?': 'goodday2'}
-
-
-df_new = df.rename(columns=column_dict)
-
-# Make df where all the money values are valid (unvalid values removed --> nog niet gekeken naar 'euros' verwijderen etc.)
-drop_list = []
-for index, row in df_new.iterrows():
-    if type(row['money']) == str:
-        drop_list.append(index)
-    elif row['money'] < 0 or row['money'] > 100:
-        drop_list.append(index)
-    else:
-        # print(type(row['money']))
-        row['money'] = float(row['money'])
-
-df_money = df_new.drop(drop_list)
-
-print(len(drop_list))
-
-money_f, money_m = [], []
-for index, row in df_money.iterrows():
-    if row['gender'] == 'female':
-        money_f.append(row['money'])
-    elif row['gender'] == 'male':
-        money_m.append(row['money'])
+# money_f, money_m = [], []
+# for index, row in df_money.iterrows():
+#     if row['gender'] == 'female':
+#         money_f.append(row['money'])
+#     elif row['gender'] == 'male':
+#         money_m.append(row['money'])
 
 
 
@@ -74,7 +53,7 @@ for index, row in df_money.iterrows():
 # plt.hist(money_m)
 # plt.show()
 
-money_gender = df_money.groupby(['gender', 'money']).count()['programme']
+# money_gender = df_money.groupby(['gender', 'money']).count()['programme']
 
 # Mean van vrouwen is hoger!!! TODO: fixen om histogrammen te maken
 # female_money = money_gender['female']
@@ -94,6 +73,8 @@ money_gender = df_money.groupby(['gender', 'money']).count()['programme']
 #
 # # print(money_gender)
 # # print(type(money_gender))
+
+print(df)
 
 # 3 rijen worden hierbij verwijderd. Dit is dus wel echt alleen de combi met correcte money
 drop_list_stress = []

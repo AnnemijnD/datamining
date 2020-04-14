@@ -165,9 +165,30 @@ def money(df):
 
     return df
 
-def lateness_bedtime(df):
+def lateness_bedtime(df_new):
 
+    lateness_bedtime = []
+    dict = {19: 0, 20:1, 21:2, 22:3, 23:4, 0:5, 1:6, 2:7, 3:8, 4:9, 5:10, 6:11, 7:12}
+    for index, row in df_new.iterrows():
+        bedtime = row["bedtime"]
+        try:
+            bedtime1 = bedtime.strftime("%H:%M:%S")[0:-3]
+            bedtime1 = bedtime1.replace(":",".")
 
+            h = int(bedtime1[:len(bedtime1)-3])
+
+            bedtime2= bedtime.strftime("%M")
+            bedtime2 = bedtime2.replace(":",".")
+            new_min =  round(float(bedtime2)/60, 2)
+            new_timestamp = float(str(dict[h]) + str(new_min)[1:len(str(new_min))])
+            lateness_bedtime.append(new_timestamp)
+
+        except:
+            df_new.at[index, "bedtime"] = "NaN"
+            lateness_bedtime.append("NaN")
+
+    df_new['lateness_bedtime'] = lateness_bedtime
+    # print(df["lateness_bedtime"].to_string())
 
     return df
 
@@ -211,13 +232,13 @@ if __name__ == "__main__":
     dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
     df = new_column_names(dfold)
 
-    money = False
+    money_bool = True
 
     # als we willen werken met money, zet money op true
-    if money:
+    if money_bool:
         df = money(df)
     else:
-        df.drop(['money'], axis=1)
+        df = df.drop(['money'], axis=1)
 
     # update for birthyear
     df = birthyears(df)
@@ -229,3 +250,8 @@ if __name__ == "__main__":
     df = make_ints_floats(df)
 
     df = social_productive(df)
+
+    # fix bedtime
+    df = lateness_bedtime(df)
+
+    df.to_excel("all_cleaned.xlsx",sheet_name='clean')
