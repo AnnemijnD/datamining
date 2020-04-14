@@ -29,7 +29,7 @@ print(counter)
 
 for index, row in df.iterrows():
     row["hoi"]
-    
+
 # print(datelist)
 # print(max(datelist)) # oldest
 # print(min(datelist)) # earliest
