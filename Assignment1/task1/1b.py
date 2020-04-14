@@ -3,9 +3,6 @@ import pandas as pd
 import clean_all_Data
 
 
-def process_data():
-    df = pd.read_excel('data/ODI-2020.xlsx')
-
 def CV(df):
     train_overall, test_overall = train_test_split(df)
 
