@@ -69,7 +69,6 @@ def programme(df):
     econometrics = ["econometrics"] # '& operations research' wordt niet als losse master gezien nu
     QRM = ["qrm", "quantitative risk management"]
 
-    # other_count = 0
     for index, row in df.iterrows():
         programme = row["programme"].lower()
         if any(word in programme for word in CLS):
@@ -88,10 +87,6 @@ def programme(df):
             df.at[index, "programme"] = "QRM"
         else:
             df.at[index, "programme"] = "other"
-            # print(programme)
-            # other_count += 1
-
-    # print(other_count)
 
     return df
 
@@ -130,14 +125,59 @@ def MC(df):
 
     # print(df["stand"].to_string())
     return df
-def make_ints(df):
+
+# def programme(df):
+#     AI_list = ["AI"]
+#     Econometrics = [""]
+#
+#     for index, row in df.iterrows():
+#         programme = row["programme"]
+#         if any(word in programme for word in AI_list):
+#             df.at[index, "programme"] = "AI"
+#
+#     return df
+
+def make_ints_floats(df):
     for index, row in df.iterrows():
 
         # neighbors
         if not isinstance(row["neighbors"], int):
             df.at[index, "neighbors"] = "NaN"
 
-        # df.at[index, "machinelearning"] = answer_dict0[row["machinelearning"]]
+        # stresslevel
+        if not isinstance(row["stresslevel"], int):
+            df.at[index, "stresslevel"] = "NaN"
+        elif row["stresslevel"] < 0 or row["stresslevel"] > 100:
+            df.at[index, "stresslevel"] = "NaN"
+
+        # randomnumber
+        if not (isinstance(row["randomnumber"], float) or isinstance(row["randomnumber"], int)):
+            df.at[index, "randomnumber"] = "NaN"
+        elif row["randomnumber"] >= 0 and row["randomnumber"] <= 10:
+            df.at[index, "randomnumber"] = float(row["randomnumber"])
+        else:
+            df.at[index, "randomnumber"] = "NaN"
+
+
+
+    # print(df["randomnumber"].to_string())
+    return df
+
+def money(df):
+
+    for index, row in df.iterrows():
+        if isinstance(row["money"], str):
+            df.at[index, "money"] = "NaN"
+        elif row['money'] < 0 or row['money'] > 100:
+            df.at[index, "money"] = "NaN"
+        else:
+            df.at[index, "money"] = float(row['money'])
+
+    return df
+
+def lateness_bedtime(df):
+
+
 
     return df
 
@@ -145,15 +185,19 @@ if __name__ == "__main__":
     dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
     df = new_column_names(dfold)
 
+    money = False
+
+    # als we willen werken met money, zet money op true
+    if money:
+        df = money(df)
+    else:
+        df.drop(['money'], axis=1)
+
     # update for birthyear
     df = birthyears(df)
 
     # updates all questions with multiple choice answers
     df = MC(df)
 
-    # makes ints
-    df = make_ints(df)
-
-    df = programme(df)
-
-    print(df)
+    # makes ints and floats
+    df = make_ints_floats(df)
