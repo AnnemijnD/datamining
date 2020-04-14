@@ -177,7 +177,6 @@ def money(df):
 
 def lateness_bedtime(df_new):
 
-
     lateness_bedtime = []
     dict = {19: 0, 20:1, 21:2, 22:3, 23:4, 0:5, 1:6, 2:7, 3:8, 4:9, 5:10, 6:11, 7:12}
     for index, row in df_new.iterrows():
@@ -224,6 +223,7 @@ if __name__ == "__main__":
     # makes ints and floats
     df = make_ints_floats(df)
 
+    # fix bedtime
     df = lateness_bedtime(df)
 
     df.to_excel("all_cleaned.xlsx",sheet_name='clean')
