@@ -4,6 +4,8 @@ import dateparser
 from datetime import datetime
 from datetime import date as date_now
 
+money_bool = False
+
 def new_column_names(df):
     """
     Renames the columns
@@ -18,7 +20,7 @@ def new_column_names(df):
                 'When is your birthday (date)?': 'birthday',
                 'Number of neighbors sitting around you?': 'neighbors',
                 'Did you stand up?': 'stand',
-                'What is your stress level (0-100)?': 'stresslevel',
+                'What is your stress level (0-100)?': 'stress',
                 'You can get 100 euros if you win a local DM competition, or we don’t hold any competitions and I give everyone some money (not the same amount!). How much do you think you would deserve then? ': 'money',
                 'Give a random number': 'randomnumber',
                 'Time you went to be Yesterday': 'bedtime',
@@ -136,10 +138,10 @@ def make_ints_floats(df):
             df.at[index, "neighbors"] = "NaN"
 
         # stresslevel
-        if not isinstance(row["stresslevel"], int):
-            df.at[index, "stresslevel"] = "NaN"
-        elif row["stresslevel"] < 0 or row["stresslevel"] > 100:
-            df.at[index, "stresslevel"] = "NaN"
+        if not isinstance(row["stress"], int):
+            df.at[index, "stress"] = "NaN"
+        elif row["stress"] < 0 or row["stress"] > 100:
+            df.at[index, "stress"] = "NaN"
 
         # randomnumber
         if not (isinstance(row["randomnumber"], float) or isinstance(row["randomnumber"], int)):
@@ -225,19 +227,15 @@ def social_productive(df):
     # delete columns
     df.drop(columns=['goodday1', 'goodday2'])
 
-    print("hoi misschien werkt dit")
-
     return df
 
 
-def run_all():
+def run_all(money_bool):
     dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
     df = new_column_names(dfold)
 
-    money = False
-
     # als we willen werken met money, zet money op true
-    if money:
+    if money_bool:
         df = money(df)
     else:
         df = df.drop(['money'], axis=1)
@@ -257,20 +255,14 @@ def run_all():
     # fix bedtime
     df = lateness_bedtime(df)
 
-    lastthingsfixed = False
-    if lastthingsfixed:
-        return df
-    else:
-        df = df.drop("goodday1", axis=1)
-        df = df.drop("goodday2", axis=1)
-        return df
+    df = social_productive(df)
+
+    return df
 
 
 if __name__ == "__main__":
     dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
     df = new_column_names(dfold)
-
-    money_bool = False
 
     # als we willen werken met money, zet money op true
     if money_bool:
