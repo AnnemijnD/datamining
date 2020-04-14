@@ -192,6 +192,44 @@ def lateness_bedtime(df):
 
     return df
 
+def social_productive(df):
+
+    df['social'] = len(df) * [0]
+    df['productive'] = len(df) * [0]
+
+    social_words = ["friend", "social", "family"]
+    productive_words = ["productive", "study", "work", "working", "getting done",
+        "productivity", "school", "research", "papers", "assignment", "coding",
+        "goals", "achieve", "competing", "progress", "accomplish"]
+    notwords = ["workout", "work out", "working out", "work-out"]
+
+    for index, row in df.iterrows():
+
+        good1 = str(row["goodday1"]).lower()
+        good2 = str(row["goodday2"]).lower()
+
+        if any(word in good1 for word in social_words):
+            df.at[index, "social"] = 1
+
+        if any(word in good2 for word in social_words):
+            df.at[index, "social"] = 1
+
+        if any(word in good1 for word in productive_words):
+            if not any(word in good1 for word in notwords):
+                df.at[index, "productive"] = 1
+
+        if any(word in good2 for word in productive_words):
+            if not any(word in good2 for word in notwords):
+                df.at[index, "productive"] = 1
+
+    # delete columns
+    df.drop(columns=['goodday1', 'goodday2'])
+
+    print("hoi misschien werkt dit")
+
+    return df
+
+
 def run_all():
     dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
     df = new_column_names(dfold)
@@ -232,10 +270,10 @@ if __name__ == "__main__":
     dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
     df = new_column_names(dfold)
 
-    money = False
+    money_bool = False
 
     # als we willen werken met money, zet money op true
-    if money:
+    if money_bool:
         df = money(df)
     else:
         df = df.drop(['money'], axis=1)
@@ -255,13 +293,7 @@ if __name__ == "__main__":
     # fix bedtime
     df = lateness_bedtime(df)
 
-    lastthingsfixed = False
-
-
-    if not lastthingsfixed:
-        df = df.drop("goodday1", axis=1)
-        df = df.drop("goodday2", axis=1)
-
-
+    # set social and productivity bools
+    df = social_productive(df)
 
     df.to_excel("all_cleaned.xlsx",sheet_name='clean')
