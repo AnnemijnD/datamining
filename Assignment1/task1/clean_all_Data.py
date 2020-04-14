@@ -25,8 +25,8 @@ def new_column_names(df):
                 'What makes a good day for you (1)?': 'goodday1',
                 'What makes a good day for you (2)?': 'goodday2'}
 
-    df_new = df.rename(columns=column_dict)
-    return df_new
+    df = df.rename(columns=column_dict)
+    return df
 
 def birthyears(df):
     """
@@ -166,11 +166,11 @@ def money(df):
 
     return df
 
-def lateness_bedtime(df_new):
+def lateness_bedtime(df):
 
     lateness_bedtime = []
     dict = {19: 0, 20:1, 21:2, 22:3, 23:4, 0:5, 1:6, 2:7, 3:8, 4:9, 5:10, 6:11, 7:12}
-    for index, row in df_new.iterrows():
+    for index, row in df.iterrows():
         bedtime = row["bedtime"]
         try:
             bedtime1 = bedtime.strftime("%H:%M:%S")[0:-3]
@@ -185,15 +185,15 @@ def lateness_bedtime(df_new):
             lateness_bedtime.append(new_timestamp)
 
         except:
-            df_new.at[index, "bedtime"] = "NaN"
+            df.at[index, "bedtime"] = "NaN"
             lateness_bedtime.append("NaN")
 
-    df_new['lateness_bedtime'] = lateness_bedtime
+    df['lateness_bedtime'] = lateness_bedtime
 
-    return df_new
-    
+    return df
+
 def run_all():
-    dfold = pd.read_excel('../data/ODI-2020_cleaned.xlsx')
+    dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
     df = new_column_names(dfold)
 
     money = False
@@ -229,7 +229,7 @@ def run_all():
 
 
 if __name__ == "__main__":
-    dfold = pd.read_excel('../data/ODI-2020_cleaned.xlsx')
+    dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
     df = new_column_names(dfold)
 
     money = False
