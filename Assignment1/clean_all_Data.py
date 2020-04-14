@@ -213,7 +213,7 @@ if __name__ == "__main__":
     if money:
         df = money(df)
     else:
-        df.drop(['money'], axis=1)
+        df = df.drop(['money'], axis=1)
 
     # update for birthyear
     df = birthyears(df)
