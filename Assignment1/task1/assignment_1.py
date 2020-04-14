@@ -21,14 +21,12 @@ column_dict = {'What programme are you in?': 'programme',
             'What makes a good day for you (2)?': 'goodday2'}
 
 df_new = df.rename(columns=column_dict)
-print(df_new)
+
 valid_entries = 0
 for index, row in df_new.iterrows():
     if type(row['money']) == str:
-        # print(row['money'])\
-        continue
-    # if type(row['money']) == int or type(row['money']) == float:
+        print(row['money'])
     else:
         if row['money'] >= 0 and row['money'] <= 100:
             valid_entries += 1
-# print(valid_entries)
+print(valid_entries)
