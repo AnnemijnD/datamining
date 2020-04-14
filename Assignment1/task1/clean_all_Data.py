@@ -225,6 +225,8 @@ def social_productive(df):
     # delete columns
     df.drop(columns=['goodday1', 'goodday2'])
 
+    print("hoi misschien werkt dit")
+
     return df
 
 
