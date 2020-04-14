@@ -5,7 +5,7 @@ import seaborn as sns
 
 
 
-df = pd.read_excel('data/ODI-2020.xlsx')
+df = pd.read_excel('data/ODI-2020_cleaned.xlsx')
 
 column_dict = {'What programme are you in?': 'programme',
             'Have you taken a course on machine learning?': 'machinelearning',
@@ -39,6 +39,8 @@ for index, row in df_new.iterrows():
         row['money'] = float(row['money'])
 
 df_money = df_new.drop(drop_list)
+
+print(len(drop_list))
 
 money_f, money_m = [], []
 for index, row in df_money.iterrows():

@@ -59,12 +59,49 @@ def birthyears(df):
     # print(counter)
     return df
 
+def programme(df):
+    # capital check
+    CLS = ["cls", "computational science"]
+    AI = ["ai", "artificial intelligence"]
+    BA = ["ba", "business analytics"]
+    CS = ["cs", "computer science"]
+    BF = ["bioinformatics"]
+    econometrics = ["econometrics"] # '& operations research' wordt niet als losse master gezien nu
+    QRM = ["qrm", "quantitative risk management"]
+
+    # other_count = 0
+    for index, row in df.iterrows():
+        programme = row["programme"].lower()
+        if any(word in programme for word in CLS):
+            df.at[index, "programme"] = "CLS"
+        elif any(word in programme for word in AI):
+            df.at[index, "programme"] = "AI"
+        elif any(word in programme for word in BA):
+            df.at[index, "programme"] = "BA"
+        elif any(word in programme for word in CS):
+            df.at[index, "programme"] = "CS"
+        elif any(word in programme for word in BF):
+            df.at[index, "programme"] = "BF"
+        elif any(word in programme for word in econometrics):
+            df.at[index, "programme"] = "econometrics"
+        elif any(word in programme for word in QRM):
+            df.at[index, "programme"] = "QRM"
+        else:
+            df.at[index, "programme"] = "other"
+            # print(programme)
+            # other_count += 1
+
+    # print(other_count)
+
+    return df
+
+
 def MC(df):
     answer_dict0 = {"no": 0, "yes": 1, "unknown": "NaN"}
     answer_dict1 = {0: 0, 1: 1, "unknown": "NaN"}
     answer_dict2 = {"mu": 0, "sigma": 1, "unknown": "NaN"}
     answer_dict3 = {"nee": 0, "ja": 1, "unknown": "NaN"}
-    answer_dict4 = {"female": 0, "male": 1, "unknown": "NaN"}
+    answer_dict4 = {"male": 0, "female": 1, "unknown": "NaN"}
     answer_dict5 = {"fat":0, "slim":1, "I have no idea what you are talking about":2,
                     "neither":3, "unknown":4}
 
@@ -116,3 +153,7 @@ if __name__ == "__main__":
 
     # makes ints
     df = make_ints(df)
+
+    df = programme(df)
+
+    print(df)
