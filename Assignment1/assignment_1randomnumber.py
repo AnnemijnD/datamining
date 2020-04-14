@@ -1,7 +1,12 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
-df = pd.read_excel('data/ODI-2020.xlsx')
+df = pd.read_excel('data/ODI-2020_cleaned.xlsx')
+from datetime import datetime
+import dateparser
+from dateutil import parser
+
 # print(df.head())
 
 column_dict = {'What programme are you in?': 'programme',
@@ -22,15 +27,28 @@ column_dict = {'What programme are you in?': 'programme',
             'What makes a good day for you (2)?': 'goodday2'}
 
 df_new = df.rename(columns=column_dict)
-print(df_new)
-valid_entries = 0
+
+# plt.boxplot([[1,2,3,3], [3,3,5,8]])
+# plt.show()
+counter = 0
+numbers = []
 for index, row in df_new.iterrows():
-    if type(row['money']) == str:
-        # print(row['money'])\
-        continue
-    # if type(row['money']) == int or type(row['money']) == float:
-    else:
-        if row['money'] >= 0 and row['money'] <= 100:
-            # print(row['money'])
-            valid_entries += 1
-# print(valid_entries)
+    nr = row["randomnumber"]
+    try:
+        nr = float(nr)
+        if nr >= 0 and nr <= 10:
+            numbers.append(nr)
+        else:
+            counter += 1
+            print(nr, "else")
+    except:
+        counter += 1
+        print(nr, "except")
+
+plt.title("Histogram random numbers (n=193)")
+plt.xlabel("Random numbers")
+plt.ylabel("Frequency")
+print(counter)
+print(len(numbers))
+plt.hist(numbers, histtype='bar', ec='black')
+plt.show()
