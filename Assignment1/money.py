@@ -1,3 +1,7 @@
+"""
+DEZE WERKT NU EFFIES NIET MEER OMDAT DE DATABASE ANDERS IS NU
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

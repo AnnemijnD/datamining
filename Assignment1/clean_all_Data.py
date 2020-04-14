@@ -126,16 +126,6 @@ def MC(df):
     # print(df["stand"].to_string())
     return df
 
-# def programme(df):
-#     AI_list = ["AI"]
-#     Econometrics = [""]
-#
-#     for index, row in df.iterrows():
-#         programme = row["programme"]
-#         if any(word in programme for word in AI_list):
-#             df.at[index, "programme"] = "AI"
-#
-#     return df
 
 def make_ints_floats(df):
     for index, row in df.iterrows():
@@ -181,6 +171,42 @@ def lateness_bedtime(df):
 
     return df
 
+
+def social_productive(df):
+
+    df['social'] = len(df) * [0]
+    df['productive'] = len(df) * [0]
+
+    social_words = ["friend", "social", "family"]
+    productive_words = ["productive", "study", "work", "working", "getting done",
+        "productivity", "school", "research", "papers", "assignment", "coding",
+        "goals", "achieve", "competing", "progress", "accomplish"]
+    notwords = ["workout", "work out", "working out", "work-out"]
+
+    for index, row in df.iterrows():
+
+        good1 = str(row["goodday1"]).lower()
+        good2 = str(row["goodday2"]).lower()
+
+        if any(word in good1 for word in social_words):
+            df.at[index, "social"] = 1
+
+        if any(word in good2 for word in social_words):
+            df.at[index, "social"] = 1
+
+        if any(word in good1 for word in productive_words):
+            if not any(word in good1 for word in notwords):
+                df.at[index, "productive"] = 1
+
+        if any(word in good2 for word in productive_words):
+            if not any(word in good2 for word in notwords):
+                df.at[index, "productive"] = 1
+
+    # delete columns
+    df.drop(columns=['goodday1', 'goodday2'])
+
+    return df
+
 if __name__ == "__main__":
     dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
     df = new_column_names(dfold)
@@ -201,3 +227,5 @@ if __name__ == "__main__":
 
     # makes ints and floats
     df = make_ints_floats(df)
+
+    df = social_productive(df)
