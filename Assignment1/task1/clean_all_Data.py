@@ -261,31 +261,7 @@ def run_all(money_bool):
 
 
 if __name__ == "__main__":
-    dfold = pd.read_excel('data/ODI-2020_cleaned.xlsx')
-    df = new_column_names(dfold)
 
-    # als we willen werken met money, zet money op true
-    if money_bool:
-        df = money(df)
-    else:
-        df = df.drop(['money'], axis=1)
-
-    # update programme categories
-    df = programme(df)
-
-    # update for birthyear
-    df = birthyears(df)
-
-    # updates all questions with multiple choice answers
-    df = MC(df)
-
-    # makes ints and floats
-    df = make_ints_floats(df)
-
-    # fix bedtime
-    df = lateness_bedtime(df)
-
-    # set social and productivity bools
-    df = social_productive(df)
+    df = run_all(True)
 
     df.to_excel("all_cleaned.xlsx",sheet_name='clean')
