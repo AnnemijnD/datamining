@@ -72,3 +72,9 @@ print(train_data[["Title", "Survived"]].groupby(["Title"]).mean())
 sns.countplot(x="Title", data=train_data, hue="Survived")
 plt.title("Survival per title")
 plt.show()
+
+plt.figure(figsize=(10,3))
+ax = sns.barplot(x="Title", y="Survived", data=train_data)
+plt.show()
+
+print("xxxxxxxxxxxxxxxxx",data.loc[data['Fare'].isnull()])
