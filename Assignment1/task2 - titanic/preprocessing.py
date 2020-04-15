@@ -9,9 +9,22 @@ def change_sex(df):
 
     return df
 
+def is_alone(df):
+    """
+    Add column that states whether the passenger was travelling alone
+    """
+
+    df['alone'] = len(df) * [0]
+    for index, row in df.iterrows():
+        if row['SibSp'] == 0 and row['Parch'] == 0:
+            df.at[index, 'alone'] = 1
+
+    return df
+
 def run_all(df):
 
     df = change_sex(df)
+    df = is_alone(df)
 
     return df
 
@@ -28,7 +41,12 @@ def run_both():
 
 if __name__ == "__main__":
 
-    df_train, df_test = run_both()
+    df_train = pd.read_csv("data/train.csv")
+    df_test = pd.read_csv("data/test.csv")
 
-    df_train.to_excel("train_processed.xlsx",sheet_name='clean')
-    df_test.to_excel("test_processed.xlsx",sheet_name='clean')
+
+
+    # df_train, df_test = run_both()
+    #
+    # df_train.to_excel("train_processed.xlsx",sheet_name='clean')
+    # df_test.to_excel("test_processed.xlsx",sheet_name='clean')

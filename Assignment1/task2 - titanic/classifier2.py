@@ -8,24 +8,25 @@ import preprocessing
 
 df_train, df_test = preprocessing.run_both()
 
-print(df_train.head())
+print(df_train.columns)
 
 
-def CV(df):
-
-    kfold = KFold(10, True)
-
-    # train and test are arrays with the row indices from the train_overall set
-    for train, test in kfold.split(train_overall):
-
-        # HIER HET MODEL
-        # SLA OP HOE GOED DE PREDICTIONS WAREN
-
-        break
-
-    return kfold
+# todo: values selecteren!
+df_train = df_train.drop(columns=['PassengerId', 'Name', 'SibSp', 'Parch', 'Ticket', 'Cabin', 'Fare', 'Embarked'])
+df_test = df_test.drop(columns=['Name', 'SibSp', 'Parch', 'Ticket', 'Cabin', 'Fare', 'Embarked'])
+df_test_copy = df_test.drop(columns=['PassengerId']).copy()
 
 
+df_train_features = df_train.drop(columns=['Survived'])
+df_train_survived = df_train['Survived']
+
+random_forest = RandomForestClassifier(n_estimators=100)
+random_forest.fit(df_train_features, df_train_survived)
+# test_pred = random_forest.predict(df_test)
+score = random_forest.score(df_train_features, df_train_survived)
+# acc_random_forest = round(random_forest.score(X_train, Y_train) * 100, 2)
+# acc_random_forest
+print(score)
 
 # # DIT HEEFT 63% GOED VOORSPELD, MET SIBSP ERBIJ 64 --> ALLEBEI ERG MATIG
 # y = train_data["Survived"]
@@ -57,3 +58,11 @@ def CV(df):
 #         incorrect += 1
 #
 # print(correct*100/(incorrect+correct))
+
+
+# # TODO Dit is leuk bij exploratie erbij misschien!!!!
+# alone = df_train.loc[df_train.alone == 0]["Survived"]
+# not_alone = df_train.loc[df_train.alone == 1]["Survived"]
+# rate_alone = sum(alone)/len(alone) # halve survived
+# rate_not_alone = sum(not_alone)/len(not_alone) # 30% survived
+# # print(rate_alone, rate_not_alone)
