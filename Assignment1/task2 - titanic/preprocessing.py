@@ -31,6 +31,17 @@ def change_sex(df):
 
     return df
 
+def is_alone(df):
+    """
+    Add column that states whether the passenger was travelling alone
+    """
+
+    df['alone'] = len(df) * [0]
+    for index, row in df.iterrows():
+        if row['SibSp'] == 0 and row['Parch'] == 0:
+            df.at[index, 'alone'] = 1
+
+    return df
 
 def add_titles(data):
     titles = []
@@ -123,6 +134,7 @@ def missing_values(data):
 def preprocess(df):
 
     df = change_sex(df)
+    df = is_alone(df)
     df = add_titles(df)
     df = family_size(df)
     df = drop_uninteresting(df)
@@ -147,9 +159,17 @@ def run_both():
 
 if __name__ == "__main__":
 
+<<<<<<< HEAD
     df_train, df_test = run_both()
     importance(df_train)
+=======
+    df_train = pd.read_csv("data/train.csv")
+    df_test = pd.read_csv("data/test.csv")
+
+>>>>>>> 84755292d2a94ccf34feece36b6e8660d1f58f63
 
 
-    # df_train.to_excel("train_processed.xlsx",sheet_name="clean")
-    # df_test.to_excel("test_processed.xlsx",sheet_name="clean")
+    # df_train, df_test = run_both()
+    #
+    # df_train.to_excel("train_processed.xlsx",sheet_name='clean')
+    # df_test.to_excel("test_processed.xlsx",sheet_name='clean')

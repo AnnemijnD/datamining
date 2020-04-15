@@ -6,15 +6,12 @@ from sklearn.model_selection import train_test_split, KFold
 import preprocessing
 
 
-df_train, df_test = preprocessing.run_both()
+df_train, df_test = preprocessing.run_both(False)
 
-print(df_train.columns)
-
-
-# todo: values selecteren!
-df_train = df_train.drop(columns=['PassengerId', 'Name', 'SibSp', 'Parch', 'Ticket', 'Cabin', 'Fare', 'Embarked'])
-df_test = df_test.drop(columns=['Name', 'SibSp', 'Parch', 'Ticket', 'Cabin', 'Fare', 'Embarked'])
-df_test_copy = df_test.drop(columns=['PassengerId']).copy()
+df_train = df_train.drop(columns=['PassengerId', 'Name', 'Ticket', 'Cabin', 'Fare'])
+pass_id_test = df_test['PassengerId']
+df_test = df_test.drop(columns=['PassengerId', 'Name', 'Ticket', 'Cabin', 'Fare'])
+# df_test_copy = df_test.drop(columns=['PassengerId']).copy()
 
 
 df_train_features = df_train.drop(columns=['Survived'])
@@ -22,11 +19,14 @@ df_train_survived = df_train['Survived']
 
 random_forest = RandomForestClassifier(n_estimators=100)
 random_forest.fit(df_train_features, df_train_survived)
-# test_pred = random_forest.predict(df_test)
 score = random_forest.score(df_train_features, df_train_survived)
-# acc_random_forest = round(random_forest.score(X_train, Y_train) * 100, 2)
-# acc_random_forest
 print(score)
+
+prediction_test_set = random_forest.predict(df_test)
+predictions = pd.DataFrame({'PassengerId': pass_id_test,
+                                    'Survived': prediction_test_set})
+predictions.to_csv('solutions/prediction_random_forrest.csv', index=False)
+
 
 # # DIT HEEFT 63% GOED VOORSPELD, MET SIBSP ERBIJ 64 --> ALLEBEI ERG MATIG
 # y = train_data["Survived"]
