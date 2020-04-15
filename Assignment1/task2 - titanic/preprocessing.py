@@ -3,6 +3,7 @@ import re
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
+
 def change_sex(df):
     for index, row in df.iterrows():
         if row["Sex"] == "male":
@@ -32,12 +33,21 @@ def add_titles(data):
             titles_cat.append("Miss")
         elif title in ["Mrs", "Mme"]:
             titles_cat.append("Mrs")
-        elif title in ["Capt", "Col", "Dr", "Major", "Rev", "Master"]:
+        elif title in ["Capt", "Col", "Dr", "Major", "Rev"]:
             titles_cat.append("Other")
         elif title == "Mr":
             titles_cat.append(title)
+        elif title == "Master":
+            titles_cat.append(title)
 
     data["Title"] = titles_cat
+
+    return data
+
+
+def family_size(data):
+    data["FamSize"] = data["SibSp"] + data["Parch"]
+    data.drop(["SibSp", "Parch"], axis=1, inplace=True)
 
     return data
 
@@ -50,7 +60,7 @@ def drop_uninteresting(data):
 
 
 def scale(data):
-    to_scale = ["Age", "Fare", "Parch", "Pclass", "SibSp"]
+    to_scale = ["Age", "Fare", "Pclass", "FamSize"]
     scaler = StandardScaler()
 
     for var in to_scale:
@@ -78,12 +88,14 @@ def missing_values(data):
             print(f"Missing values in {col}")
 
     # TODO: DIT IS OVERGENOMEN IK GA HIER NOG DINGEN VERANDEREN nuuu
-    title_ages = dict(data.groupby("Title")["Age"].median())
+    print("--------------------", data.groupby("Title")["Age"].mean())
+    data["Age"].fillna(data.groupby("Title")["Age"].transform("mean"), inplace=True)
+    # title_ages = dict(data.groupby("Title")["Age"].median())
     # create a column of the average ages
-    data["age_med"] = data["Title"].apply(lambda x: title_ages[x])
+    # data["age_med"] = data["Title"].apply(lambda x: title_ages[x])
     # replace all missing ages with the value in this column
-    data["Age"].fillna(data["age_med"], inplace=True, )
-    del data["age_med"]
+    # data["Age"].fillna(data["age_med"], inplace=True, )
+    # del data["age_med"]
     # impute missing Fare values using median of Pclass groups
     class_fares = dict(data.groupby("Pclass")["Fare"].median())
     # create a column of the average fares
@@ -99,6 +111,7 @@ def run_all(df):
 
     df = change_sex(df)
     df = add_titles(df)
+    df = family_size(df)
     df = drop_uninteresting(df)
     df = missing_values(df)
     df = categorical(df)
@@ -123,5 +136,5 @@ if __name__ == "__main__":
 
     df_train, df_test = run_both()
 
-    df_train.to_excel("train_processed.xlsx",sheet_name="clean")
-    df_test.to_excel("test_processed.xlsx",sheet_name="clean")
+    # df_train.to_excel("train_processed.xlsx",sheet_name="clean")
+    # df_test.to_excel("test_processed.xlsx",sheet_name="clean")
