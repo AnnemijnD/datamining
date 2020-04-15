@@ -3,78 +3,45 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import re
+from preprocessing import add_titles, family_size
 
 # load data
 train_data = pd.read_csv("data/train.csv")
 test_data = pd.read_csv("data/test.csv")
-
-print(train_data.head())
-print(test_data.head())
-
-# percentage of men and women who survived
-print(train_data[["Sex", "Survived"]].groupby(["Sex"], as_index=False).mean())
-sns.countplot(x="Sex", data=train_data, hue="Survived")
-plt.title("Survival per gender")
-plt.show()
-
-# survival per ticket type
-sns.countplot(x="Pclass", data=train_data, hue="Survived")
-plt.title("Survival per ticket type")
-plt.show()
-
-sns.countplot(x="Embarked", data=train_data, hue="Survived")
-plt.title("Survival if embarked")
-plt.show()
-
-# check for missing values: Age, Cabin, Embarked
-for col in train_data.columns.values:
-    if train_data[col].isnull().any():
-        print(f"Missing values in {col}")
-
-# concatenated train and test data to find all relevant titles
-data = pd.concat([train_data, test_data], ignore_index=True)
-
-# obtain titles from passenger"s names
-def add_titles(data):
-    titles = []
-    for row in data["Name"]:
-        new=re.split(r"[,.]+", row)
-        titles.append(new[1].strip())
-
-    print(set(titles))
-
-    # make new column with title category
-    titles_cat = []
-    for title in titles:
-        if title in ["Don", "Sir", "Jonkheer"]:
-            titles_cat.append("Noble male")
-        elif title in ["the Countess", "Lady", "Dona"]:
-            titles_cat.append("Noble female")
-        elif title in ["Ms", "Miss", "Mlle"]:
-            titles_cat.append("Miss")
-        elif title in ["Mrs", "Mme"]:
-            titles_cat.append("Mrs")
-        elif title in ["Capt", "Col", "Dr", "Major", "Rev", "Master"]:
-            titles_cat.append("Other")
-        elif title == "Mr":
-            titles_cat.append(title)
-
-    data["Title"] = titles_cat
-    return data
-
-# add titles for train data
-train_data = add_titles(train_data)
-# print(train_data)
-
-# survival per title
 pd.factorize(train_data["Survived"])
-print(train_data[["Title", "Survived"]].groupby(["Title"]).mean())
-sns.countplot(x="Title", data=train_data, hue="Survived")
-plt.title("Survival per title")
-plt.show()
 
-plt.figure(figsize=(10,3))
-ax = sns.barplot(x="Title", y="Survived", data=train_data)
-plt.show()
+# preprocess data by adding titles and family sizes
+train_data = add_titles(train_data)
+train_data = family_size(train_data)
 
-print("xxxxxxxxxxxxxxxxx",data.loc[data['Fare'].isnull()])
+
+def plot(var):
+    """
+    Makes a plot for the surviving fraction of a variable of the training data set.
+    """
+    # MISSCHIEN KUNNEN WE HIER NOG IETS MEE
+    # total_dead = len(train_data["Survived"] == 0)
+    # total_survived = len(train_data["Survived"] == 1)
+    # died = train_data[train_data["Survived"] == 0][var].value_counts() / total_dead
+    # survived = train_data[train_data["Survived"] == 1][var].value_counts() / total_survived
+    sns.set()
+    sns.set_color_codes("pastel")
+
+    # order bars for family size variable
+    if var == "FamSize":
+        sns.barplot(x=var, y="Survived", data=train_data, label="Total", color="b",\
+                    capsize=.1, errwidth=.7, order=["alone", 1, 2, 3, "5 or more"])
+    else:
+        sns.barplot(x=var, y="Survived", data=train_data, label="Total", color="b",\
+                    capsize=.1, errwidth=.7)
+
+    plt.title("Ratio of survivors for variable " + str(var))
+    plt.ylim([0, 1])
+    plt.show()
+
+# choose variables of interest
+variables = ["Sex", "Title", "Embarked", "Pclass", "FamSize"]
+
+# make plots for each variable
+# for var in variables:
+#     plot(var)
