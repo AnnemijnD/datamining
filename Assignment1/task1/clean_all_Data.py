@@ -92,6 +92,25 @@ def programme(df):
         else:
             df.at[index, "programme"] = "other"
 
+    # for index, row in df.iterrows():
+    #     programme = row["programme"].lower()
+    #     if any(word in programme for word in CLS):
+    #         df.at[index, "programme"] = 0
+    #     elif any(word in programme for word in AI):
+    #         df.at[index, "programme"] = 1
+    #     elif any(word in programme for word in BA):
+    #         df.at[index, "programme"] = 2
+    #     elif any(word in programme for word in CS):
+    #         df.at[index, "programme"] = 3
+    #     elif any(word in programme for word in BF):
+    #         df.at[index, "programme"] = 4
+    #     elif any(word in programme for word in econometrics):
+    #         df.at[index, "programme"] = 5
+    #     elif any(word in programme for word in QRM):
+    #         df.at[index, "programme"] = 6
+    #     else:
+    #         df.at[index, "programme"] = 7
+
     return df
 
 
