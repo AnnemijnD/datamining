@@ -20,13 +20,9 @@ def importance(df_train):
 
 
 def change_sex(df):
-    # for index, row in df.iterrows():
-    #     if row["Sex"] == "male":
-    #         df.at[index, "Sex"] = 0
-    #     else:
-    #         df.at[index, "Sex"] = 1
-
-    # map the two genders to 0 and 1
+    """
+    Change sex variable to binary (0 is male and 1 is female).
+    """
     df["Sex"] = df.Sex.map({'male': 0, 'female': 1})
 
     return df
@@ -44,6 +40,9 @@ def is_alone(df):
     return df
 
 def add_titles(data):
+    """
+    Extract titles from passengers' names and include them in new column.
+    """
     titles = []
     for row in data["Name"]:
         new=re.split(r"[,.]+", row)
@@ -73,24 +72,30 @@ def add_titles(data):
 
 
 def family_size(data):
+    """
+    Combine variable SibSp and Parch into new variable for family size.
+    """
     data["FamSize"] = data["SibSp"] + data["Parch"]
     data.drop(["SibSp", "Parch"], axis=1, inplace=True)
-    print(data["FamSize"])
-    print(data['FamSize'].value_counts())
-    data['FamSize'] = data['FamSize'].apply(lambda x: "alone" if x == 0 else x if x < 4 else "5 or more")
-    print(data['FamSize'].value_counts())
+    data['FamSize'] = data['FamSize'].apply(lambda x: "alone" if x == 0 else x if x < 4 else "4 or more")
 
     return data
 
 
 def drop_uninteresting(data):
-    uninteresting = ["Cabin", "Name", "Ticket", "PassengerId"]
+    """
+    Drop variable that are not of interest.
+    """
+    uninteresting = ["Cabin", "Name", "Ticket"]
     data.drop(uninteresting, axis=1, inplace=True)
 
     return data
 
 
 def scale(data):
+    """
+    Scale numerical values to values between -1 and 1.
+    """
     to_scale = ["Age", "Fare", "Pclass"]
     scaler = StandardScaler()
 
@@ -102,6 +107,10 @@ def scale(data):
 
 
 def categorical(data):
+    """
+    Make categorical variables numerical by converting them to multiple binary
+    variable columns for each factor in the variable.
+    """
 
     # variables which need to be transformed to categorical
     to_categorical = ["Embarked", "Title", "FamSize"]
@@ -113,25 +122,30 @@ def categorical(data):
     return data
 
 def missing_values(data):
+    """
+    Replace missing values by a sensible value, i.e. the mean value of individuals in the same group.
+    """
+
     # check for missing values: Age, Cabin, Embarked
     for col in data.columns.values:
         if data[col].isnull().any():
             print(f"Missing values in {col}")
 
+    # replace missing age by mean of same title
     data["Age"].fillna(data.groupby("Title")["Age"].transform("mean"), inplace=True)
 
-    # impute missing Fare values using median of Pclass groups
-    # class_fares = dict(data.groupby("Pclass")["Fare"].median())
-    # create a column of the average fares
-    # data["fare_med"] = data["Pclass"].apply(lambda x: class_fares[x])
-    # replace all missing fares with the value in this column
-    data["Fare"].fillna(data.groupby("Pclass")["Fare"].transform("mean"), inplace=True, )
-    # del data["fare_med"]
+    # replace missing fare by mean of same class
+    data["Fare"].fillna(data.groupby("Pclass")["Fare"].transform("mean"), inplace=True)
+
+    # replace embarked by backfill method
     data["Embarked"].fillna(method="backfill", inplace=True)
 
     return data
 
 def preprocess(df):
+    """
+    Preprocess the data set using all specified functions.
+    """
 
     df = change_sex(df)
     df = is_alone(df)
@@ -146,6 +160,9 @@ def preprocess(df):
 
 
 def run_both():
+    """
+    Load and preprocess the training and testing datasets.
+    """
 
     # load data
     df_train = pd.read_csv("data/train.csv")
@@ -159,15 +176,11 @@ def run_both():
 
 if __name__ == "__main__":
 
-<<<<<<< HEAD
+    # get data
     df_train, df_test = run_both()
+
+    # evaluate importance of all variables
     importance(df_train)
-=======
-    df_train = pd.read_csv("data/train.csv")
-    df_test = pd.read_csv("data/test.csv")
-
->>>>>>> 84755292d2a94ccf34feece36b6e8660d1f58f63
-
 
     # df_train, df_test = run_both()
     #
