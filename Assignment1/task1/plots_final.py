@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import clean_all_Data
 import numpy as np
+import scipy.stats as sts
 
 def gender_social(df):
     male = [0,0]
@@ -32,7 +33,7 @@ def gender_social(df):
     male[0] = male[0]/all_male
     male[1] = male[1]/all_male
 
-
+    print(female, male)
     barWidth = 0.33
 
     # Set position of bar on X axis
@@ -132,36 +133,41 @@ def gender_social(df):
 #     plt.show()
 
 def bedtime_gender(df):
-#
-#     male = []
-#     female = []
-#
-#     df = df.dropna(subset=["gender", "lateness_bedtime"])
-#     # df = df["lateness_bedtime"].dropna()
-#     df = df.reset_index(drop=True)
-#
-#     for index, row in df.iterrows():
-#         if row["gender"] == 0:
-#             # print(row["lateness_bedtime"])
-#             male.append(row["lateness_bedtime"])
-#         elif row["gender"] == 1:
-#             # print(row["lateness_bedtime"])
-#
-#             female.append(row["lateness_bedtime"])
-#
-#     # print(yes)
-#     # print(no)
-#     plt.boxplot([male, female], labels=["male", "female"])
-#     plt.show()
 
-# def bedtime_stresslevel(df):
+    male = []
+    female = []
 
-    # df = df.dropna(subset=["stress", "lateness_bedtime"])
-    # df = df.reset_index(drop=True)
+    df = df.dropna(subset=["gender", "lateness_bedtime"])
+    # df = df["lateness_bedtime"].dropna()
+    df = df.reset_index(drop=True)
 
+    for index, row in df.iterrows():
+        if row["gender"] == 0:
+            # print(row["lateness_bedtime"])
+            male.append(row["lateness_bedtime"])
+        elif row["gender"] == 1:
+            # print(row["lateness_bedtime"])
+
+            female.append(row["lateness_bedtime"])
+
+    # print(yes)
+    # print(no)
+    plt.boxplot([male, female], labels=["male", "female"])
+    plt.show()
+
+def bedtime_stresslevel(df):
+    x = []
+    y = []
+    df = df.dropna(subset=["stress", "lateness_bedtime"])
+    df = df.reset_index(drop=True)
+    df = df[df["lateness_bedtime"].between(df["lateness_bedtime"].quantile(.15), df["lateness_bedtime"].quantile(.85))]
     for index, row in df.iterrows():
         # print(row["stress"], row["lateness_bedtime"])
         plt.scatter(row["stress"], row["lateness_bedtime"], color="blue")
+        x.append(row["stress"])
+        y.append(row["lateness_bedtime"])
+    print(sts.pearsonr(x, y))
+
 
     plt.show()
 
@@ -237,7 +243,13 @@ def sannesplot(df):
     ax.set_xlabel("Money", fontsize=12)
     plt.show()
 
+
+
+
+
 df = clean_all_Data.run_all(True)
+# bedtime_stresslevel(df)
+
 
 # bedtime_gender(df)
 # randomnumber(df)
