@@ -132,8 +132,7 @@ def missing_values(data):
     # check for missing values: Age, Cabin, Embarked
     for col in data.columns.values:
         if data[col].isnull().any():
-            # print(f"Missing values in {col}")
-            pass
+            print(f"Missing values in {col}")
 
     # replace missing age by mean of same title
     data["Age"].fillna(data.groupby("Title")["Age"].transform("mean"), inplace=True)
@@ -151,10 +150,12 @@ def preprocess(df):
     """
     Preprocess the data set using all specified functions.
     """
+
     df = change_sex(df)
     df = is_alone(df)
     df = add_titles(df)
     df = family_size(df)
+
     df = missing_values(df)
     df = drop_uninteresting(df)
     df = categorical(df)
