@@ -61,12 +61,12 @@ def add_titles(data):
             titles_cat.append("Miss")
         elif title in ["Mrs", "Mme"]:
             titles_cat.append("Mrs")
-        elif title in ["Capt", "Col", "Dr", "Major", "Rev"]:
-            titles_cat.append("Other")
         elif title == "Mr":
             titles_cat.append(title)
         elif title == "Master":
             titles_cat.append(title)
+        else:
+            titles_cat.append("Other")
 
     data["Title"] = titles_cat
 
@@ -155,6 +155,10 @@ def preprocess(df):
     df = is_alone(df)
     df = add_titles(df)
     df = family_size(df)
+
+    if drop:
+        df = drop_uninteresting(df)
+
     df = missing_values(df)
     df = drop_uninteresting(df)
     df = categorical(df)
