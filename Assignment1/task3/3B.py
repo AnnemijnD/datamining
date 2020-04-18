@@ -11,7 +11,6 @@ Poging zonder train en test split
 """
 
 df2 = pd.read_csv('weight-height.csv')
-ax = df2.plot.scatter(x='Weight', y = 'Height')
 
 weight = df2['Weight'].values.reshape(-1, 1)
 height = df2['Height'].values.reshape(-1, 1)
@@ -25,8 +24,6 @@ MAE = metrics.mean_absolute_error(height, predictions_lr)
 print(MSE, MAE)
 print(linear_r.coef_)
 
-x = np.linspace(0, max(df2['Weight']), max(df2['Weight']))
-plt.plot(linear_r.coef_[0][0] * x + linear_r.intercept_, c='red', label="Linear regression")
 
 # range berekenen based on eucledian norm
 # np.linalg.norm(a, b)
@@ -53,7 +50,6 @@ height_tree = height_tree[sort_id_weight]
 tree_m = tree.DecisionTreeRegressor(criterion='mse', max_depth=3)
 tree_m.fit(weight_tree, height_tree)
 predictions_tree = tree_m.predict(weight_tree)
-plt.plot(weight_tree, predictions_tree, c = 'yellow', label="Tree regression MSE")
 MSE = metrics.mean_squared_error(height, predictions_tree)
 MAE = metrics.mean_absolute_error(height, predictions_tree)
 print(MSE, MAE)
@@ -61,17 +57,39 @@ print(MSE, MAE)
 
 tree_m = tree.DecisionTreeRegressor(criterion='mae', max_depth=3)
 tree_m.fit(weight_tree, height_tree)
-predictions_tree = tree_m.predict(weight_tree)
-plt.plot(weight_tree, predictions_tree, c ='green', label="Tree regression MAE")
-MSE = metrics.mean_squared_error(height, predictions_tree)
-MAE = metrics.mean_absolute_error(height, predictions_tree)
+predictions_tree2 = tree_m.predict(weight_tree)
+MSE = metrics.mean_squared_error(height, predictions_tree2)
+MAE = metrics.mean_absolute_error(height, predictions_tree2)
 print(MSE, MAE)
+
+
+# HIER STAAT HET PLOTJE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ax = df2.plot.scatter(x='Weight', y = 'Height')
+x = np.linspace(0, max(df2['Weight']), max(df2['Weight']))
+plt.plot(linear_r.coef_[0][0] * x + linear_r.intercept_, c='red', label="Linear regression")
+plt.plot(weight_tree, predictions_tree, c = 'yellow', label="Tree regression MSE")
+plt.plot(weight_tree, predictions_tree2, c ='green', label="Tree regression MAE")
 
 plt.xlim(min(df2['Weight']) -10, max(df2['Weight']) + 10)
 plt.ylabel("Height in inches", fontsize=12)
 plt.xlabel("Weight in pounds", fontsize=12)
 plt.title("Three regression methods for weight and height data of 10000 people", fontsize=14)
 plt.legend()
+plt.show()
+
+
+"""
+Icecream plot
+"""
+x = [1, 2, 3, 4, 5]
+y = []
+for i in range(len(x)):
+    y.append(0.75 * x[i] + 1)
+
+plt.scatter(x, y)
+plt.plot(x, y)
+plt.xlabel("Scoops of icecream", fontsize = 12)
+plt.ylabel("Price of icecream", fontsize = 12)
 plt.show()
 
 
