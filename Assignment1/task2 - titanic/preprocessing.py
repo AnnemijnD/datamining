@@ -31,25 +31,23 @@ def add_titles(data):
         new=re.split(r"[,.]+", row)
         titles.append(new[1].strip())
 
-    print(set(titles))
+    # print(set(titles))
 
     # make new column with title category
     titles_cat = []
     for title in titles:
-        if title in ["Don", "Sir", "Jonkheer"]:
-            titles_cat.append("Noble male")
-        elif title in ["the Countess", "Lady", "Dona"]:
-            titles_cat.append("Noble female")
+        if title in ["Don", "Sir", "Jonkheer", "the Countess", "Lady", "Dona"]:
+            titles_cat.append("Noble")
         elif title in ["Ms", "Miss", "Mlle"]:
             titles_cat.append("Miss")
         elif title in ["Mrs", "Mme"]:
             titles_cat.append("Mrs")
-        elif title in ["Capt", "Col", "Dr", "Major", "Rev"]:
-            titles_cat.append("Other")
         elif title == "Mr":
             titles_cat.append(title)
         elif title == "Master":
             titles_cat.append(title)
+        else:
+            titles_cat.append("Other")
 
     data["Title"] = titles_cat
 
@@ -85,7 +83,7 @@ def categorical(data):
 
     # variables which need to be transformed to categorical
     to_categorical = ["Embarked", "Title"]
-    print(data.head())
+    # print(data.head())
     for var in to_categorical:
         data = pd.concat([data, pd.get_dummies(data[var], prefix=var)], axis=1)
         del data[var]
@@ -96,10 +94,11 @@ def missing_values(data):
     # check for missing values: Age, Cabin, Embarked
     for col in data.columns.values:
         if data[col].isnull().any():
-            print(f"Missing values in {col}")
+            # print(f"Missing values in {col}")
+            pass
 
     # TODO: DIT IS OVERGENOMEN IK GA HIER NOG DINGEN VERANDEREN nuuu
-    print("--------------------", data.groupby("Title")["Age"].mean())
+    # print("--------------------", data.groupby("Title")["Age"].mean())
     data["Age"].fillna(data.groupby("Title")["Age"].transform("mean"), inplace=True)
     # title_ages = dict(data.groupby("Title")["Age"].median())
     # create a column of the average ages
@@ -118,13 +117,16 @@ def missing_values(data):
 
     return data
 
-def run_all(df):
+def run_all(df, drop):
 
     df = change_sex(df)
     df = is_alone(df)
     df = add_titles(df)
     df = family_size(df)
-    df = drop_uninteresting(df)
+
+    if drop:
+        df = drop_uninteresting(df)
+
     df = missing_values(df)
     df = categorical(df)
     df = scale(df)
@@ -132,14 +134,14 @@ def run_all(df):
     return df
 
 
-def run_both():
+def run_both(drop):
 
     # load data
     df_train = pd.read_csv("data/train.csv")
     df_test = pd.read_csv("data/test.csv")
 
-    df_train = run_all(df_train)
-    df_test = run_all(df_test)
+    df_train = run_all(df_train, drop)
+    df_test = run_all(df_test, drop)
 
     return df_train, df_test
 
