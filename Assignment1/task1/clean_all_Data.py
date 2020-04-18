@@ -63,65 +63,71 @@ def birthyears(df):
 
 def programme(df):
     # capital check
-    CLS = ["cls", "computational science"]
-    AI = ["ai", "artificial intelligence"]
-    BA = ["ba", "business analytics"]
-    CS = ["cs", "computer science"]
-    BF = ["bioinformatics"]
+    CLS = [" cls ", "computational science"]
+    AI = [" ai ", "artificial intelligence"]
+    BA = [" ba ", "business analytics"]
+    CS = [" cs ", "computer science"]
+    BF = [" bioinformatics "]
     econometrics = ["econometrics"] # '& operations research' wordt niet als losse master gezien nu
-    QRM = ["qrm", "quantitative risk management"]
+    QRM = [" qrm ", "quantitative risk management"]
 
-
+    CLScounter = 0
+    AIcounter = 0
+    BAcounter = 0
+    CScounter = 0
+    BFcounter = 0
+    Econcounter = 0
+    QRMcounter = 0
+    others = 0
 
     for index, row in df.iterrows():
-        programme = row["programme"].lower()
+        programme = " " + row["programme"].lower()+ " "
+
         if any(word in programme for word in CLS):
             df.at[index, "programme"] = "CLS"
+            CLScounter +=1
         elif any(word in programme for word in AI):
             df.at[index, "programme"] = "AI"
+            AIcounter +=1
         elif any(word in programme for word in BA):
             df.at[index, "programme"] = "BA"
+            BAcounter +=1
         elif any(word in programme for word in CS):
             df.at[index, "programme"] = "CS"
+            CScounter +=1
         elif any(word in programme for word in BF):
             df.at[index, "programme"] = "BF"
+            BFcounter +=1
         elif any(word in programme for word in econometrics):
             df.at[index, "programme"] = "econometrics"
+            Econcounter +=1
         elif any(word in programme for word in QRM):
             df.at[index, "programme"] = "QRM"
+            QRMcounter +=1
         else:
             df.at[index, "programme"] = "other"
+            others +=1
 
-    # for index, row in df.iterrows():
-    #     programme = row["programme"].lower()
-    #     if any(word in programme for word in CLS):
-    #         df.at[index, "programme"] = 0
-    #     elif any(word in programme for word in AI):
-    #         df.at[index, "programme"] = 1
-    #     elif any(word in programme for word in BA):
-    #         df.at[index, "programme"] = 2
-    #     elif any(word in programme for word in CS):
-    #         df.at[index, "programme"] = 3
-    #     elif any(word in programme for word in BF):
-    #         df.at[index, "programme"] = 4
-    #     elif any(word in programme for word in econometrics):
-    #         df.at[index, "programme"] = 5
-    #     elif any(word in programme for word in QRM):
-    #         df.at[index, "programme"] = 6
-    #     else:
-    #         df.at[index, "programme"] = 7
+    # print("CLS: ", CLScounter, "AI", AIcounter, "BA ", BAcounter, "CS ", CScounter,
+    #         "BF ", BFcounter, "EC ", Econcounter, "QRM", QRMcounter,"others", others)
+    # one hot encoding
+    df2 = pd.get_dummies(df["programme"],prefix='programme')
+    # df = df.drop("programme", axis=1)
+    df = pd.concat([df, df2], axis=1)
 
     return df
+
+
 
 
 def MC(df):
     answer_dict0 = {"no": 0, "yes": 1, "unknown": "NaN"}
     answer_dict1 = {0: 0, 1: 1, "unknown": "NaN"}
-    answer_dict2 = {"mu": 0, "sigma": 1, "unknown": "NaN"}
+    answer_dict2 = {"sigma": 0, "mu": 1, "unknown": "NaN"}
     answer_dict3 = {"nee": 0, "ja": 1, "unknown": "NaN"}
     answer_dict4 = {"male": 0, "female": 1, "unknown": "NaN"}
-    answer_dict5 = {"fat":0, "slim":1, "I have no idea what you are talking about":2,
-                    "neither":3, "unknown":4}
+
+
 
     for index, row in df.iterrows():
 
@@ -140,13 +146,9 @@ def MC(df):
         # gender
         df.at[index, "gender"] = answer_dict4[row["gender"]]
 
-        # chocolate
-        df.at[index, "chocolate"] = answer_dict5[row["chocolate"]]
-
         # stand up
         df.at[index, "stand"] = answer_dict0[row["stand"]]
 
-    # print(df["stand"].to_string())
     return df
 
 def make_ints_floats(df):
@@ -157,10 +159,12 @@ def make_ints_floats(df):
             df.at[index, "neighbors"] = "NaN"
 
         # stresslevel
-        if not isinstance(row["stress"], int):
+        if not (isinstance(row["stress"], float) or isinstance(row["stress"], int)):
             df.at[index, "stress"] = "NaN"
         elif row["stress"] < 0 or row["stress"] > 100:
             df.at[index, "stress"] = "NaN"
+        else:
+            df.at[index, "stress"] = float(row["stress"])
 
         # randomnumber
         if not (isinstance(row["randomnumber"], float) or isinstance(row["randomnumber"], int)):
@@ -172,7 +176,6 @@ def make_ints_floats(df):
 
 
 
-    # print(df["randomnumber"].to_string())
     return df
 
 def money(df):
@@ -210,6 +213,7 @@ def lateness_bedtime(df):
             lateness_bedtime.append("NaN")
 
     df['lateness_bedtime'] = lateness_bedtime
+    df = df.drop("bedtime", axis=1)
 
     return df
 
@@ -244,8 +248,17 @@ def social_productive(df):
                 df.at[index, "productive"] = 1
 
     # delete columns
-    df.drop(columns=['goodday1', 'goodday2'])
+    df = df.drop(columns=['goodday1', 'goodday2'])
 
+    return df
+
+def chocolate(df):
+    # one hot encoding
+    df = df.replace({'chocolate': "unknown"}, np.nan)
+    df2 = pd.get_dummies(df["chocolate"],prefix='chocolate', dummy_na=True)
+    # df = df.drop("chocolate", axis=1)
+
+    df = pd.concat([df, df2], axis=1)
     return df
 
 
@@ -261,7 +274,7 @@ def run_all(money_bool):
 
     # update programme categories
     df = programme(df)
-
+    df = chocolate(df)
     # update for birthyear
     df = birthyears(df)
 
@@ -275,6 +288,10 @@ def run_all(money_bool):
     df = lateness_bedtime(df)
 
     df = social_productive(df)
+    # df = df.drop("randomnumber", axis=1)
+    df = df.replace('NaN', np.nan)
+    df = df.replace('unknown', np.nan)
+
 
     return df
 

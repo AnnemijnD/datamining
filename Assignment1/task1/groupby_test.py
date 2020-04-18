@@ -4,6 +4,8 @@ import numpy as np
 import seaborn as sns
 import re
 
+sns.set()
+sns.set_color_codes("pastel")
 
 # import data
 filename = 'data/ODI-2020.xlsx'
@@ -82,9 +84,14 @@ stress_unkn = list(gender_dict["unknown"][10].values)
 
 # boxplot stress level per gender
 plt.boxplot([stress_fem, stress_male, stress_unkn])
-plt.xticks([1, 2, 3], ['Female', 'Male', 'Unknown'])
-plt.title("Stress levels of students per gender")
-plt.ylabel("Stress level")
+plt.xticks([1, 2, 3], ['Female', 'Male', 'Unknown'], fontsize=18)
+plt.title("Stress levels of students per gender", fontsize=22)
+plt.ylabel("Stress level", fontsize=20)
+ax = plt.gca()
+t = ax.title
+t.set_position([.5, 1.05])
+plt.subplots_adjust(bottom=.15, left=.15)
+plt.savefig("results/stress.png", bbox_inches="tight")
 plt.show()
 
 
@@ -119,8 +126,23 @@ df4["round_y"] = round_y
 
 # plot ages of students
 plt.hist(years)
-plt.title("Age of students")
+plt.title("Year of being born of students")
 plt.show()
+
+# plotting
+sns.distplot(years, bins=10, kde=False, norm_hist=False).tick_params(labelsize=18)
+
+# plot style properties
+ax = plt.gca()
+for ax in plt.gcf().axes:
+    ax.set_xlabel("Year", fontsize=20)
+    ax.set_ylabel("Number of students", fontsize=20)
+plt.title("Year of being born of students", fontsize=22)
+t = ax.title
+t.set_position([.5, 1.05])
+plt.subplots_adjust(bottom=.15, left=.15)
+plt.savefig("results/year_born.png", bbox_inches="tight")
+
 
 # plot stress level per age group
 plt.scatter(list(df4["round_y"].values), list(df4[10].values))

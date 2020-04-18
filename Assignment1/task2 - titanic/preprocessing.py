@@ -2,16 +2,32 @@ import pandas as pd
 import re
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import SelectKBest, f_classif
+
+
+def importance(df_train):
+
+    target = df_train['Survived'].values
+    select_features = df_train.columns.values
+
+    selector = SelectKBest(f_classif, len(select_features))
+    selector.fit(df_train, target)
+    scores = -np.log10(selector.pvalues_)
+    indices = np.argsort(scores)[::-1]
+
+    print('Features importance:')
+    for i in range(len(scores)):
+        print('%.2f %s' % (scores[indices[i]], select_features[indices[i]]))
 
 
 def change_sex(df):
-    for index, row in df.iterrows():
-        if row["Sex"] == "male":
-            df.at[index, "Sex"] = 0
-        else:
-            df.at[index, "Sex"] = 1
+    """
+    Change sex variable to binary (0 is male and 1 is female).
+    """
+    df["Sex"] = df.Sex.map({'male': 0, 'female': 1})
 
     return df
+
 
 def is_alone(df):
     """
@@ -26,6 +42,9 @@ def is_alone(df):
     return df
 
 def add_titles(data):
+    """
+    Extract titles from passengers' names and include them in new column.
+    """
     titles = []
     for row in data["Name"]:
         new=re.split(r"[,.]+", row)
@@ -55,21 +74,31 @@ def add_titles(data):
 
 
 def family_size(data):
+    """
+    Combine variable SibSp and Parch into new variable for family size.
+    """
     data["FamSize"] = data["SibSp"] + data["Parch"]
     data.drop(["SibSp", "Parch"], axis=1, inplace=True)
+    data['FamSize'] = data['FamSize'].apply(lambda x: "alone" if x == 0 else x if x < 4 else "4 or more")
 
     return data
 
 
 def drop_uninteresting(data):
-    uninteresting = ["Cabin", "Name", "Ticket", "PassengerId"]
+    """
+    Drop variable that are not of interest.
+    """
+    uninteresting = ["Cabin", "Name", "Ticket"]
     data.drop(uninteresting, axis=1, inplace=True)
 
     return data
 
 
 def scale(data):
-    to_scale = ["Age", "Fare", "Pclass", "FamSize"]
+    """
+    Scale numerical values to values between -1 and 1.
+    """
+    to_scale = ["Age", "Fare"]
     scaler = StandardScaler()
 
     for var in to_scale:
@@ -80,44 +109,48 @@ def scale(data):
 
 
 def categorical(data):
+    """
+    Make categorical variables numerical by converting them to multiple binary
+    variable columns for each factor in the variable.
+    """
 
     # variables which need to be transformed to categorical
-    to_categorical = ["Embarked", "Title"]
-    # print(data.head())
+    to_categorical = ["Embarked", "Title", "FamSize", "Pclass"]
+
     for var in to_categorical:
         data = pd.concat([data, pd.get_dummies(data[var], prefix=var)], axis=1)
         del data[var]
 
     return data
 
+
 def missing_values(data):
+    """
+    Replace missing values by a sensible value, i.e. the mean value of individuals in the same group.
+    """
+
     # check for missing values: Age, Cabin, Embarked
     for col in data.columns.values:
         if data[col].isnull().any():
             # print(f"Missing values in {col}")
             pass
 
-    # TODO: DIT IS OVERGENOMEN IK GA HIER NOG DINGEN VERANDEREN nuuu
-    # print("--------------------", data.groupby("Title")["Age"].mean())
+    # replace missing age by mean of same title
     data["Age"].fillna(data.groupby("Title")["Age"].transform("mean"), inplace=True)
-    # title_ages = dict(data.groupby("Title")["Age"].median())
-    # create a column of the average ages
-    # data["age_med"] = data["Title"].apply(lambda x: title_ages[x])
-    # replace all missing ages with the value in this column
-    # data["Age"].fillna(data["age_med"], inplace=True, )
-    # del data["age_med"]
-    # impute missing Fare values using median of Pclass groups
-    class_fares = dict(data.groupby("Pclass")["Fare"].median())
-    # create a column of the average fares
-    data["fare_med"] = data["Pclass"].apply(lambda x: class_fares[x])
-    # replace all missing fares with the value in this column
-    data["Fare"].fillna(data["fare_med"], inplace=True, )
-    del data["fare_med"]
+
+    # replace missing fare by mean of same class
+    data["Fare"].fillna(data.groupby("Pclass")["Fare"].transform("mean"), inplace=True)
+
+    # replace embarked by backfill method
     data["Embarked"].fillna(method="backfill", inplace=True)
 
     return data
 
-def run_all(df, drop):
+
+def preprocess(df):
+    """
+    Preprocess the data set using all specified functions.
+    """
 
     df = change_sex(df)
     df = is_alone(df)
@@ -134,24 +167,28 @@ def run_all(df, drop):
     return df
 
 
-def run_both(drop):
+def run_both():
+    """
+    Load and preprocess the training and testing datasets.
+    """
 
     # load data
     df_train = pd.read_csv("data/train.csv")
     df_test = pd.read_csv("data/test.csv")
 
-    df_train = run_all(df_train, drop)
-    df_test = run_all(df_test, drop)
+    df_train = preprocess(df_train)
+    df_test = preprocess(df_test)
 
     return df_train, df_test
 
 
 if __name__ == "__main__":
 
-    df_train = pd.read_csv("data/train.csv")
-    df_test = pd.read_csv("data/test.csv")
+    # get data
+    df_train, df_test = run_both()
 
-
+    # evaluate importance of all variables
+    importance(df_train)
 
     # df_train, df_test = run_both()
     #
