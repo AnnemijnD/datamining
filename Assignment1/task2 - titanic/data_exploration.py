@@ -24,13 +24,14 @@ print(train_data[categorical_columns].describe().to_latex())
 train_data = add_titles(train_data)
 train_data = family_size(train_data)
 
+
 # to view dataset
 def display_df(df):
     """
     Display full dataframe in terminal.
     """
     with pd.option_context("display.max_rows", 1000, "display.max_columns", 100):
-        display(df)
+        display(df.head(10))
 
 
 def plot(var):
@@ -47,24 +48,38 @@ def plot(var):
 
     # order bars for family size variable
     if var == "FamSize":
-        sns.barplot(x=var, y="Survived", data=train_data, label="Total", color="b",\
-                    capsize=.1, errwidth=.7, order=["alone", 1, 2, 3, "4 or more"])
+        sns.barplot(x=var, y="Survived", data=train_data, color="b",\
+                    capsize=.1, errwidth=.7, order=["alone", 1, 2, 3, "4 or more"]).\
+                    tick_params(labelsize=18)
     else:
-        sns.barplot(x=var, y="Survived", data=train_data, label="Total", color="b",\
-                    capsize=.1, errwidth=.7)
+        sns.barplot(x=var, y="Survived", data=train_data, color="b",\
+                    capsize=.1, errwidth=1.1).tick_params(labelsize=18)
 
-    plt.title("Ratio of survivors for variable " + str(var), fontsize=16)
+    # plot style properties
+    ax = plt.gca()
+
+    for ax in plt.gcf().axes:
+        x = ax.get_xlabel()
+        y = ax.get_ylabel()
+        ax.set_xlabel(x, fontsize=20)
+        ax.set_ylabel(y, fontsize=20)
+
+    plt.title("Ratio of survivors for variable " + str(var), fontsize=22)
+    t = ax.title
+    t.set_position([.5, 1.05])
     plt.ylim([0, 1])
-    plt.savefig("results/survived_" + str(var) + ".png")
+    plt.subplots_adjust(bottom=.15, left=.15)
+    plt.savefig("results/survived_" + str(var) + ".png", bbox_inches="tight")
+
     plt.show()
 
 
+if __name__ == "__main__":
 
+    # choose variables of interest based on overview of data
+    display_df(train_data.describe(include='all').T)
+    variables = ["Sex", "Title", "Embarked", "Pclass", "FamSize"]
 
-# choose variables of interest based on overview of data
-display_df(train_data.describe(include='all').T)
-variables = ["Sex", "Title", "Embarked", "Pclass", "FamSize"]
-
-# make plots for each variable
-for var in variables:
-    plot(var)
+    # make plots for each variable
+    for var in variables:
+        plot(var)

@@ -6,6 +6,7 @@ from sklearn.feature_selection import SelectKBest, f_classif
 
 
 def importance(df_train):
+
     target = df_train['Survived'].values
     select_features = df_train.columns.values
 
@@ -26,6 +27,7 @@ def change_sex(df):
     df["Sex"] = df.Sex.map({'male': 0, 'female': 1})
 
     return df
+
 
 def is_alone(df):
     """
@@ -48,7 +50,7 @@ def add_titles(data):
         new=re.split(r"[,.]+", row)
         titles.append(new[1].strip())
 
-    print(set(titles))
+    # print(set(titles))
 
     # make new column with title category
     titles_cat = []
@@ -96,7 +98,7 @@ def scale(data):
     """
     Scale numerical values to values between -1 and 1.
     """
-    to_scale = ["Age", "Fare", "Pclass"]
+    to_scale = ["Age", "Fare"]
     scaler = StandardScaler()
 
     for var in to_scale:
@@ -113,13 +115,14 @@ def categorical(data):
     """
 
     # variables which need to be transformed to categorical
-    to_categorical = ["Embarked", "Title", "FamSize"]
-    print(data.head())
+    to_categorical = ["Embarked", "Title", "FamSize", "Pclass"]
+
     for var in to_categorical:
         data = pd.concat([data, pd.get_dummies(data[var], prefix=var)], axis=1)
         del data[var]
 
     return data
+
 
 def missing_values(data):
     """
@@ -141,6 +144,7 @@ def missing_values(data):
     data["Embarked"].fillna(method="backfill", inplace=True)
 
     return data
+
 
 def preprocess(df):
     """
