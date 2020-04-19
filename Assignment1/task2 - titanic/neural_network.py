@@ -73,14 +73,14 @@ def create_model_testing(lyrs, act, act_out, opt='Adam', dr=0.2):
     return model
 
 
-def create_model(lyrs=[32], act="relu", opt='Adam', dr=0.2):
+def create_model(X_train, lyrs=[32], act="relu", opt='Adam', dr=0.2):
     """
     Creates neural network model with specified amount of layers and activation types.
     """
 
     # set random seed for reproducibility
-    seed(42)
-    tf.random.set_seed(42)
+    # seed(42)
+    # tf.random.set_seed(42)
 
     model = Sequential()
 
@@ -107,21 +107,23 @@ def create_prediction(df_test, X_train, y_train, X_test):
     """
 
     # make model: with or without dropout between hidden layers
-    model = create_model()
+    model = create_model(X_train)
     # model = create_dropout_model()
-    print(model.summary())
+    # print(model.summary())
 
     # train model
     training = model.fit(X_train, y_train, epochs=25, batch_size=50,\
                         validation_split=0.2, verbose=0)
     val_acc = np.mean(training.history['val_accuracy'])
-    print("Model validation accuracy during training: ", val_acc)
+    print("NN model validation accuracy during training: ", val_acc)
 
     # calculate predictions for test dataset
     df_test['Survived'] = model.predict(X_test)
     df_test['Survived'] = df_test['Survived'].apply(lambda x: round(x, 0)).astype('int')
     solution = df_test[['PassengerId', 'Survived']]
     solution.to_csv("solutions/NN_prediction_relu_lay1-32_batch50_epoch25_dr2_dropout.csv", index=False)
+
+    return val_acc
 
 
 def model_testing():

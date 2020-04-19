@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from sklearn import linear_model, metrics, model_selection, preprocessing, tree, datasets
 from scipy.spatial import distance
+import seaborn as sns
 
+sns.set()
 
 """
 Poging zonder train en test split
@@ -34,8 +36,6 @@ for index, row in df2.iterrows():
     predicted = (row['Weight'], predictions_lr[index])
     # norms.append(np.linalg.norm(observed, predicted))
     norms.append(distance.euclidean(observed, predicted))
-
-
 
 print(min(norms))
 print(max(norms))
@@ -71,10 +71,14 @@ plt.plot(weight_tree, predictions_tree, c = 'yellow', label="Tree regression MSE
 plt.plot(weight_tree, predictions_tree2, c ='green', label="Tree regression MAE")
 
 plt.xlim(min(df2['Weight']) -10, max(df2['Weight']) + 10)
-plt.ylabel("Height in inches", fontsize=12)
-plt.xlabel("Weight in pounds", fontsize=12)
-plt.title("Three regression methods for weight and height data of 10000 people", fontsize=14)
-plt.legend()
+plt.ylabel("Height in inches", fontsize=20)
+plt.xlabel("Weight in pounds", fontsize=20)
+plt.title("Regression methods for weight and height data (N=10^3)", fontsize=22)
+plt.xticks(fontsize=18)
+plt.yticks(fontsize=18)
+t = ax.title
+t.set_position([.5, 1.05])
+plt.legend(fontsize=18)
 plt.show()
 
 

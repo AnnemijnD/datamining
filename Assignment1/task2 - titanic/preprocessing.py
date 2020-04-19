@@ -156,8 +156,8 @@ def preprocess(df):
     df = add_titles(df)
     df = family_size(df)
 
-    if drop:
-        df = drop_uninteresting(df)
+    # if drop:
+    #     df = drop_uninteresting(df)
 
     df = missing_values(df)
     df = drop_uninteresting(df)
