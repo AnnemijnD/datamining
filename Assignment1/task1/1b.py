@@ -80,10 +80,10 @@ def predictions(model, X, y):
 if __name__ == "__main__":
     df = clean_all_Data.run_all(False)
     # est = preprocessing.KBinsDiscretizer(n_bins=4, encode='onehot', strategy='uniform')
-    df["lateness_bedtime"] = pd.qcut(df['lateness_bedtime'], 4, labels=False)
-    df2 = pd.get_dummies(df["lateness_bedtime"],prefix='lateness_bedtime')
+    # df["lateness_bedtime"] = pd.qcut(df['lateness_bedtime'], 4, labels=False)
+    # df2 = pd.get_dummies(df["lateness_bedtime"],prefix='lateness_bedtime')
     # df = df.drop("lateness_bedtime", axis=1)
-    df = pd.concat([df, df2], axis=1)
+    # df = pd.concat([df, df2], axis=1)
 
 
     # x = df.values #returns a numpy array
@@ -109,9 +109,12 @@ if __name__ == "__main__":
 
     data = []
     labels = []
+    regression = ["stress", "money", "randomnumber", "lateness_bedtime", "bedtime", "birthday"]
 
     for col in df.columns:
         if col in chocolatelist or col in bedtimelist or col in programmelist:
+            continue
+        if col in regression:
             continue
 
         col_data = []
@@ -140,12 +143,12 @@ if __name__ == "__main__":
 
 
                 # print(df1.head)
-            elif y_col[0:8] == "lateness":
-                remove_list = [n for n in bedtimelist if n != y_col]
-                df1 = df1.drop(remove_list, axis=1)
-                df2 = df2.drop(remove_list, axis=1)
-                y = df1["lateness_bedtime"]
-                y2 = df2["lateness_bedtime"]
+            # elif y_col[0:8] == "lateness":
+            #     remove_list = [n for n in bedtimelist if n != y_col]
+            #     df1 = df1.drop(remove_list, axis=1)
+            #     df2 = df2.drop(remove_list, axis=1)
+            #     y = df1["lateness_bedtime"]
+            #     y2 = df2["lateness_bedtime"]
 
 
             elif y_col[0:9] == "programme":
@@ -163,10 +166,10 @@ if __name__ == "__main__":
 
             df1 = df1.drop("chocolate", axis=1)
             df2 = df2.drop("chocolate", axis=1)
-            # print(df1["chocolate_I have no idea what you are talking about"])
-            # print(df2.columns)
-            df1 = df1.drop("lateness_bedtime", axis=1)
-            df2 = df2.drop("lateness_bedtime", axis=1)
+            # # print(df1["chocolate_I have no idea what you are talking about"])
+            # # print(df2.columns)
+            # df1 = df1.drop("lateness_bedtime", axis=1)
+            # df2 = df2.drop("lateness_bedtime", axis=1)
             df1 = df1.drop("programme", axis=1)
             df2 = df2.drop("programme", axis=1)
 
@@ -187,7 +190,12 @@ if __name__ == "__main__":
             model = classify_KNN(X, y)
             accuracy = predictions(model, X2, y2)
             print("     acc:", accuracy, "features:", X2.columns)
-            col_data.append(accuracy/100)
+
+            # model2 = classify_KNN(df1[["lateness_bedtime", "productive", "social", "statistics"]], df1["gender"])
+            # accuracy2 = predictions(model2, df1[["lateness_bedtime", "productive", "social", "statistics"]], df1["gender"])
+            # print("     acc2:", accuracy2, "features:", "lateness_bedtime", "productive", "social", "statistics")
+            # if col == "machinelearning":
+            #     exit()
 
         data.append(col_data)
     plt.boxplot(data, labels=labels)
