@@ -73,14 +73,14 @@ def create_model_testing(lyrs, act, act_out, opt='Adam', dr=0.2):
     return model
 
 
-def create_model(X_train, lyrs=[32], act="relu", opt='Adam', dr=0.2):
+def create_model(lyrs=[4], act="relu", opt='Adam', dr=0.2):
     """
     Creates neural network model with specified amount of layers and activation types.
     """
 
     # set random seed for reproducibility
-    # seed(42)
-    # tf.random.set_seed(42)
+    seed(42)
+    tf.random.set_seed(42)
 
     model = Sequential()
 
@@ -91,8 +91,8 @@ def create_model(X_train, lyrs=[32], act="relu", opt='Adam', dr=0.2):
     for i in range(1, len(lyrs)):
         model.add(Dense(lyrs[i], activation=act))
 
-    # dropout
-    model.add(Dropout(dr))
+        # dropout
+        model.add(Dropout(dr))
 
     # create output layer
     model.add(Dense(1, activation="sigmoid"))  # output layer
@@ -107,23 +107,20 @@ def create_prediction(df_test, X_train, y_train, X_test):
     """
 
     # make model: with or without dropout between hidden layers
-    model = create_model(X_train)
+    model = create_model()
     # model = create_dropout_model()
-    # print(model.summary())
+    print(model.summary())
 
     # train model
-    training = model.fit(X_train, y_train, epochs=25, batch_size=50,\
-                        validation_split=0.2, verbose=0)
+    training = model.fit(X_train, y_train, epochs=100, batch_size=10, validation_split=0.2, verbose=0)
     val_acc = np.mean(training.history['val_accuracy'])
-    print("NN model validation accuracy during training: ", val_acc)
+    print("Model validation accuracy during training: ", val_acc)
 
     # calculate predictions for test dataset
     df_test['Survived'] = model.predict(X_test)
     df_test['Survived'] = df_test['Survived'].apply(lambda x: round(x, 0)).astype('int')
     solution = df_test[['PassengerId', 'Survived']]
-    solution.to_csv("solutions/NN_prediction_relu_lay1-32_batch50_epoch25_dr2_dropout.csv", index=False)
-
-    return val_acc
+    solution.to_csv("solutions/NN_prediction_dropout.csv", index=False)
 
 
 def model_testing():
@@ -131,11 +128,12 @@ def model_testing():
     Run models with various activation methods and amounts of layers.
     """
 
-    # for testing amount of layers, each layer has 32 neurons
-    layers = [[32], [32, 32], [32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32],\
-            [32, 32, 32, 32, 32], [32, 32, 32, 32, 32, 32]]
-    layers = [[1], [2], [4], [8], [16], [32], [64], [128]]
+    # for testing amount of layers
+    # dim =
+    layers = [[32], [32, 32], [32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32, 32], [32, 32, 32, 32, 32, 32]]
+    layers = [[64], [64, 64], [64, 64, 64], [64, 64, 64, 64], [64, 64, 64, 64], [64, 64, 64, 64, 64], [64, 64, 64, 64, 64, 64]]
 
+    # layers = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10]]
     # activation = ["linear", "sigmoid", "relu", "softmax"]
     activation = ["linear", "relu"]
     runs = 1
@@ -157,17 +155,16 @@ def model_testing():
             print("accuracy: " + str(np.mean(acc_avg)))
 
         # plot line for each activation method
-        plt.plot([1,2,4,8,16,32,64,128], val_accs, label=act)
+        plt.plot(np.arange(1,len(layers)+1), val_accs, label=act)
 
     # plotting
-    plt.title("Accuracy of neural network model with different layers (N=" +\
-            str(len(layers)) + ")", fontsize=22)
+    plt.title("Accuracy of neural network model with different layers (N=" + str(len(layers)) + ")", fontsize=22)
     plt.xlabel("Layers", fontsize=20)
     plt.xticks(np.arange(1, len(val_accs) + 1, 1), fontsize=18)
     plt.ylabel("Accuracy (%)", fontsize=20)
     plt.legend()
     plt.subplots_adjust(bottom=.15, left=.15)
-    plt.savefig("results/32-linear-relu-" + str(runs) + "runs.png")
+    plt.savefig("results/linear-relu-" + str(runs) + "runs.png")
     plt.show()
 
 
@@ -179,7 +176,7 @@ def param_testing(X_train, y_train):
     model = KerasClassifier(build_fn=create_model, verbose=0)
 
     # define the grid search parameters
-    batch_size = [10, 891]
+    batch_size = [10, 30, 50]
     epochs = [25, 50, 100]
     dr = [0.0, 0.2, 0.4]
     param_grid = dict(batch_size=batch_size, epochs=epochs, dr=dr)
@@ -199,9 +196,6 @@ def param_testing(X_train, y_train):
     print(means)
     print(stds)
     print(params)
-
-    print(grid.best_params_)
-    print(f'Accuracy: {round(grid.best_score_*100, 2)}%')
 
 
 if __name__ == "__main__":

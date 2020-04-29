@@ -6,6 +6,24 @@ import re
 from preprocessing import add_titles, family_size
 from IPython.display import display
 
+# load data
+train_data = pd.read_csv("data/train.csv")
+test_data = pd.read_csv("data/test.csv")
+data = pd.concat([train_data, test_data], axis=0, sort=True)
+
+# get latex table for summaries of categorical and numerical data
+data["Pclass"] = pd.Categorical(data.Pclass)
+numeric_columns = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
+categorical_columns = data.select_dtypes(include=["object", "category"]).columns.tolist()
+print('numeric columns: ' + str(numeric_columns))
+print(round(data[numeric_columns].describe(),2).to_latex())
+print('categorical columns: ' + str(categorical_columns))
+print(data[categorical_columns].describe().to_latex())
+
+# preprocess data by adding titles and family sizes
+train_data = add_titles(train_data)
+train_data = family_size(train_data)
+
 
 # to view dataset
 def display_df(df):
@@ -60,16 +78,8 @@ def backward_selection_heuristic(e_train, v):
     n = 891
     e_test = e_train * (n * v) / (n - v)
 
-
+    
 if __name__ == "__main__":
-    # load data
-    train_data = pd.read_csv("data/train.csv")
-    test_data = pd.read_csv("data/test.csv")
-    data = pd.concat([train_data, test_data], axis=0, sort=True)
-
-    # preprocess data by adding titles and family sizes
-    train_data = add_titles(train_data)
-    train_data = family_size(train_data)
 
     # choose variables of interest based on overview of data
     display_df(train_data.describe(include='all').T)
@@ -78,13 +88,3 @@ if __name__ == "__main__":
     # make plots for each variable
     for var in variables:
         plot(var)
-
-
-    # get latex table for summaries of categorical and numerical data
-    data["Pclass"] = pd.Categorical(data.Pclass)
-    numeric_columns = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
-    categorical_columns = data.select_dtypes(include=["object", "category"]).columns.tolist()
-    print('numeric columns: ' + str(numeric_columns))
-    print(round(data[numeric_columns].describe(),2).to_latex())
-    print('categorical columns: ' + str(categorical_columns))
-    print(data[categorical_columns].describe().to_latex())

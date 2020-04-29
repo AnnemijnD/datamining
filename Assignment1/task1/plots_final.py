@@ -2,6 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import clean_all_Data
 import numpy as np
+import seaborn as sns
+
+sns.set()
+sns.set_color_codes("pastel")
 
 def gender_social(df):
     male = [0,0]
@@ -46,20 +50,22 @@ def gender_social(df):
     # plt.bar(r1, female, width=barWidth, edgecolor='white', label=f'Female, n={female_total}')
     # plt.bar(r2, male, width=barWidth, edgecolor='white', label=f'Male, n={male_total}')
     plt.bar(r1, sociallist, width=barWidth, edgecolor='white', label=f'Social')
+    # plt.savefig("haaaaaaaa")
     plt.bar(r2, otherslist, width=barWidth, edgecolor='white', label=f'Others')
+    plt.xlabel("Group", fontsize=20)
+    plt.xticks([0.165,1.165], ["Female", "Male"], fontsize=18)
+    plt.ylabel("Fraction", fontsize=20)
+    plt.title("Having a good day when social per gender", fontsize=22)
+    ax = plt.gca()
+    t = ax.title
+    t.set_position([.5, 1.05])
+    plt.subplots_adjust(bottom=.15, left=.15)
+    plt.legend()
+    plt.savefig("results/social.png", bbox_inches="tight")
+    plt.show()
 
     # plt.bar(r3, unknown, width=barWidth, edgecolor='white', label='Unknown')
-
-    # Add xticks on the middle of the group bars
-    plt.xlabel('Group', fontweight='bold')
-    plt.xticks([0.165,1.165], ["Female", "Male"])
-    plt.ylabel("Fraction")
-    plt.title("Good day when social and gender")
     # plt.xticks([r + barWidth for r in range(len(bars1))], ['A', 'B', 'C', 'D', 'E'])
-
-    # Create legend & Show graphic
-    plt.legend()
-    plt.show()
 
 # def statistics_bedtime(df):
 #     yes = []
@@ -173,15 +179,30 @@ def randomnumber(df):
         if row["randomnumber"] >= 0 or row["randomnumber"] <= 10:
             counter +=1
 
+    # plt.hist(numbers, histtype='bar', ec='black')
+    # plt.title(f"Histogram random numbers (n={counter})", fontsize=22)
+    # plt.xlabel("Random numbers")
+    # plt.ylabel("Frequency")
 
+    # plotting
+    sns.distplot(numbers, bins=10, kde=False, norm_hist=False).tick_params(labelsize=18)
 
-
-    plt.title(f"Histogram random numbers (n={counter})")
+    # plot style properties
+    ax = plt.gca()
+    for ax in plt.gcf().axes:
+        x = ax.get_xlabel()
+        y = ax.get_ylabel()
+        ax.set_xlabel(x, fontsize=20)
+        ax.set_ylabel(y, fontsize=20)
+    plt.title(f"Histogram random numbers (N={counter})", fontsize=22)
+    t = ax.title
+    t.set_position([.5, 1.05])
     plt.xlabel("Random numbers")
     plt.ylabel("Frequency")
+    plt.xlim([-1, 11])
+    plt.subplots_adjust(bottom=.15, left=.15)
+    plt.savefig("results/random.png", bbox_inches="tight")
 
-    plt.hist(numbers, histtype='bar', ec='black')
-    plt.show()
 
 def sannesplot(df):
     drop_list = []
@@ -232,7 +253,7 @@ def sannesplot(df):
 
     ax = df.plot.scatter(x='money', y='stress', s=df['size'], c='gender', colormap='cool')
     ax.plot()
-    ax.set_title("Money in relation to stresslevel for different gender", fontsize=14)
+    ax.set_title("Money in relation to stresslevel for different gender", fontsize=22)
     ax.set_ylabel("Stresslevel", fontsize=12)
     ax.set_xlabel("Money", fontsize=12)
     plt.show()
