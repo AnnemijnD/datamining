@@ -38,7 +38,7 @@ def plot(var, data):
     plt.subplots_adjust(bottom=.15, left=.15)
     plt.savefig("results/booking_" + str(var) + ".png", bbox_inches="tight")
 
-    # plt.show()
+    plt.show()
 
 def plot_2(var, data):
     """
@@ -87,23 +87,29 @@ if __name__ == "__main__":
     variables = ["promotion_flag", "random_bool", "prop_review_score", "prop_starrating", "prop_brand_bool"]
 
     # make plots for each variable
-    # for var in variables:
-    #     plot(var, data)
+    for var in variables:
+        plot(var, data)
 
-    sns.countplot("srch_id", data=data)
-    plt.show()
+    ######################################################################
 
-# # filter hotels that were booked
-# booked = data[data["booking_bool"] == 1]
-#
-# # countplot for countries that customers travel from
-# sns.countplot('visitor_location_country_id', data=booked.sort_values(by=['visitor_location_country_id']),palette="Set3")
-# plt.show()
-# sns.countplot('visitor_location_country_id', data=booked, palette="Set3")
-# plt.show()
-#
-# # countplot for countries that customers travel to
-# sns.countplot('prop_country_id', data=booked.sort_values(by=['prop_country_id']), palette="Set3")
-# plt.show()
-# sns.countplot('prop_country_id', data=booked, palette="Set3")
-# plt.show()
+    # sns.countplot("srch_id", data=data) # duurt heeeel lang
+    # plt.show()
+
+    ######################################################################
+    # te veel bins, hoe dit verminderen?
+
+
+    # # filter hotels that were booked
+    # booked = data[data["booking_bool"] == 1]
+    #
+    # # countplot for countries that customers travel from
+    # sns.countplot('visitor_location_country_id', data=booked.sort_values(by=['visitor_location_country_id']),palette="Set3")
+    # plt.show()
+    # sns.countplot('visitor_location_country_id', data=booked, palette="Set3")
+    # plt.show()
+    #
+    # # countplot for countries that customers travel to
+    # sns.countplot('prop_country_id', data=booked.sort_values(by=['prop_country_id']), palette="Set3")
+    # plt.show()
+    # sns.countplot('prop_country_id', data=booked, palette="Set3")
+    # plt.show()
