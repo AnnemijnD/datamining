@@ -87,10 +87,10 @@ if __name__ == "__main__":
     variables = ["promotion_flag", "random_bool", "prop_review_score", "prop_starrating", "prop_brand_bool"]
 
     # make plots for each variable
-    for var in variables:
-        plot(var, data)
-
-    ######################################################################
+    # for var in variables:
+    #     plot(var, data)
+    #
+    # ######################################################################
 
     # sns.countplot("srch_id", data=data) # duurt heeeel lang
     # plt.show()
@@ -99,17 +99,29 @@ if __name__ == "__main__":
     # te veel bins, hoe dit verminderen?
 
 
-    # # filter hotels that were booked
-    # booked = data[data["booking_bool"] == 1]
-    #
+    # filter hotels that were booked
+    booked = data[data["booking_bool"] == 1]
+
+    # try to find linear correlations: only click_bool correlates to booking_bool
+    # print(data.corr()["booking_bool"])
+
+    predictors = [c for c in data.columns if c not in ["booking_bool","click_bool"]]
+    from sklearn.model_selection import cross_validate
+    from sklearn.ensemble import RandomForestClassifier
+    clf = RandomForestClassifier(n_estimators=10, min_weight_fraction_leaf=0.1)
+    scores = cross_validate(clf, data[predictors], data['booking_bool'], cv=3)
+    print(scores)
+
     # # countplot for countries that customers travel from
-    # sns.countplot('visitor_location_country_id', data=booked.sort_values(by=['visitor_location_country_id']),palette="Set3")
-    # plt.show()
-    # sns.countplot('visitor_location_country_id', data=booked, palette="Set3")
+    # sns.countplot('visitor_location_country_id', data=booked, order=booked.visitor_location_country_id.value_counts().iloc[:10].index)
+    # plt.title("Most prevalent visitor locations", fontsize=22)
+    # plt.subplots_adjust(bottom=.15, left=.15)
+    # plt.savefig("results/visitor_locations.png", bbox_inches="tight")
     # plt.show()
     #
     # # countplot for countries that customers travel to
-    # sns.countplot('prop_country_id', data=booked.sort_values(by=['prop_country_id']), palette="Set3")
-    # plt.show()
-    # sns.countplot('prop_country_id', data=booked, palette="Set3")
+    # sns.countplot('prop_country_id', data=booked, order=booked.prop_country_id.value_counts().iloc[:10].index)
+    # plt.title("Most prevalent hotel locations", fontsize=22)
+    # # plt.subplots_adjust(bottom=.15, left=.15)
+    # plt.savefig("results/hotel_locations.png", bbox_inches="tight")
     # plt.show()
