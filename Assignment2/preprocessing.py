@@ -9,7 +9,6 @@ import time
 from tqdm import tqdm
 
 
-# to view dataset
 def display_df(df):
     """
     Display full dataframe in terminal.
@@ -19,6 +18,9 @@ def display_df(df):
 
 
 def shorten():
+    """
+    Shorten large dataset to only 1000 rows for facilitating inspection of data.
+    """
 
     # load data
     df_train = pd.read_csv("data/training_set_VU_DM.csv")
@@ -29,21 +31,6 @@ def shorten():
 
     df_train.sample(n=1000).to_csv("data/training_short.csv", index=False)
     df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
-
-
-def test_bools():
-    """
-    There are no booked hotels that were not clicked on.
-    """
-
-    # load data
-    df_train = pd.read_csv("data/training_set_VU_DM.csv")
-
-    for index, row in tqdm(df_train.iterrows(), total=len(df_train)):
-        if row["click_bool"] == 0 and row["booking_bool"] == 1:
-            print("trick does not work")
-            quit()
-    print("trick works")
 
 
 def drop_cols(df):
@@ -58,11 +45,19 @@ def drop_cols(df):
 
 if __name__ == "__main__":
 
-    # load data
+    """ load data """
     df_train = pd.read_csv("data/training_short.csv")
     # df_test = pd.read_csv("data/test_short.csv")
+
+
+    """ drop cols """
     data = drop_cols(df_train)
 
+
+    """ TODO: make cols categorical """
+
+
+    """ overview of numerical and categorical data """
     # summaries of categorical and numerical data
     numeric_columns = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
     categorical_columns = data.select_dtypes(include=["object", "category"]).columns.tolist()
@@ -71,37 +66,35 @@ if __name__ == "__main__":
     print('categorical columns: ' + str(categorical_columns))
     # print(data[categorical_columns].describe())
 
-    # drop categorical
-    data.drop(categorical_columns, axis=1, inplace=True)
 
+    """ missing values """
     print("MISSING VALS BEFORE")
     for col in data.columns.values:
         if data[col].isnull().any():
             print(f"Missing values in {col}")
 
-    for var in numeric_columns:
-        data[var].fillna(data.groupby("booking_bool")[var].transform("mean"), inplace=True)
+    # TODO: fillnas with mean value of comparable data group
+    # for var in numeric_columns:
+    #     data[var].fillna(data.groupby("booking_bool")[var].transform("mean"), inplace=True)
 
-    data.fillna(data.mean())
+    # now data is filled with the mean of the col
+    data = data.fillna(data.mean())
 
     print("MISSING VALS AFTER")
     for col in data.columns.values:
         if data[col].isnull().any():
             print(f"Missing values in {col}")
 
-    data.fillna(1)
 
-    print("MISSING VALS AFTER")
-    dropcols = []
-    for col in data.columns.values:
-        if data[col].isnull().any():
-            print(f"Missing values in {col}")
-            dropcols.append(dropcols)
+    """ TODO: combine competitor cols """
+    # now mean is taken of comp_rates, do we want to make 1 competition score based on
+    # 3 available competitor variables (rates inv diff)?
+    data["comprate"] = data.loc[:,['comp1_rate','comp2_rate','comp3_rate','comp4_rate',\
+                        'comp5_rate','comp6_rate','comp7_rate','comp8_rate']].mean(axis=1)
+    print(data.comprate[:100])
 
-    # data.drop(dropcols, axis=1, inplace=True)
-    df.dropna(axis=0)
-    data.to_csv("data/training_scaled2.csv", index=False)
-    # scale numeric
+
+    """ scaling numeric cols"""
     scaler = StandardScaler()
 
     for var in numeric_columns:
@@ -110,7 +103,13 @@ if __name__ == "__main__":
 
     data.to_csv("data/training_scaled.csv", index=False)
 
-    # importance
+
+    """ TODO: transform categorical variables """
+
+
+    """ optional: importance estimation """
+
+    # multiple targets?
     target = data['position'].values
     select_features = data.columns.values
 

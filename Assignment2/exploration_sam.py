@@ -81,6 +81,19 @@ if __name__ == "__main__":
     # drop variables
     data = drop_cols(df_train)
 
+    """
+    jointplots
+    """
+    sns.distplot(data.prop_location_score2)
+    plt.show()
+    data.prop_location_score2 = np.exp(data.prop_location_score2)
+    sns.distplot(data.prop_location_score2)
+    plt.show()
+    quit()
+    sns.jointplot(x="prop_location_score1", y="prop_location_score2", data=data)
+    plt.show()
+
+
     # print(data.groupby([data["random_bool"], data["promotion_flag"]])["booking_bool"].count())
     # print(data.groupby([data["comp1_rate"], data["comp2_rate"]])["booking_bool"].count())
 
@@ -125,3 +138,6 @@ if __name__ == "__main__":
     # # plt.subplots_adjust(bottom=.15, left=.15)
     # plt.savefig("results/hotel_locations.png", bbox_inches="tight")
     # plt.show()
+
+###"""""""""""""""""""""""""""""""""""""###############################"
+    print(data.info())
