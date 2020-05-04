@@ -33,7 +33,7 @@ def shorten():
     df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
 
 
-def overview(df):
+def overview(data):
     """
     Overview of the data, returns numeric and categorical variables in list.
     """
@@ -66,10 +66,10 @@ def missing_values(data):
     Replace missing values by a sensible value, i.e. the mean value of individuals in the same group.
     """
     print("MISSING VALS BEFORE")
-    for col in data.columns.values:
-        if data[col].isnull().any():
-            print(f"Missing values in {col}")
-
+    # for col in data.columns.values:
+    #     if data[col].isnull().any():
+    #         print(f"Missing values in {col}")
+    print(data.isnull().sum())
     # TODO: fillnas with e.g. mean value of comparable data group
     # for var in numeric_columns:
     #     data[var].fillna(data.groupby("booking_bool")[var].transform("mean"), inplace=True)
@@ -78,22 +78,36 @@ def missing_values(data):
     data = data.fillna(data.mean())
 
     print("MISSING VALS AFTER")
-    for col in data.columns.values:
-        if data[col].isnull().any():
-            print(f"Missing values in {col}")
+    print(data.isnull().sum())
+    # for col in data.columns.values:
+    #     if data[col].isnull().any():
+    #         print(f"Missing values in {col}")
 
     return data
 
 
-def drop_cols(df):
+def drop_cols(df, uninteresting):
     """
     Drop variables that are not of interest.
     """
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
     df.drop(uninteresting, axis=1, inplace=True)
 
     return df
 
+
+def prep_data(df_train, df_test):
+    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    df_train = drop_cols(df_train, uninteresting)
+    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
+    df_test = drop_cols(df_test, uninteresting)
+    numeric_train, categorical_train = overview(df_train)
+    numeric_test, categorical_test = overview(df_test)
+    df_train = missing_values(df_train)
+    df_test = missing_values(df_test)
+    df_train = scale(df_train, numeric_train)
+    df_test = scale(df_test, numeric_test)
+
+    return df_train, df_test
 
 if __name__ == "__main__":
 
