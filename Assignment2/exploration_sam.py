@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from preprocessing import drop_cols
+from preprocessing import drop_cols, display_df
 
 sns.set()
 sns.set_color_codes("pastel")
@@ -75,55 +75,53 @@ def plot_2(var, data):
 if __name__ == "__main__":
 
     # load data
-    df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    # df_train = pd.read_csv("data/training_short.csv")
+    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    df_train = pd.read_csv("data/training_short.csv")
 
     # drop variables
     data = drop_cols(df_train)
 
-    """
-    jointplots
-    """
-    sns.distplot(data.prop_location_score2)
-    plt.show()
-    data.prop_location_score2 = np.exp(data.prop_location_score2)
-    sns.distplot(data.prop_location_score2)
-    plt.show()
-    quit()
-    sns.jointplot(x="prop_location_score1", y="prop_location_score2", data=data)
-    plt.show()
+    """ hotel prices """
+    # sns.distplot(data.prop_location_score2)
+    # plt.show()
+
+    # transform to make linear?
+    # data.prop_location_score2 = np.exp(data.prop_location_score2)
+    # sns.distplot(data.prop_location_score2)
+    # plt.show()
+
+    data_outlier1 = data[np.abs(data.price_usd-data.price_usd.mean()) <= (3*data.price_usd.std())]
+    data_outlier = data[np.abs(data.price_usd-data.price_usd.mean()) <= 2000]
+
+    # sns.distplot(data_outlier.price_usd.values)
+    # plt.show()
+    # quit()
+    # sns.jointplot(x="price_usd", y="prop_location_score2", data=data_outlier1)
+    # plt.show()
+    # quit()
+    # sns.jointplot(x="prop_location_score1", y="prop_location_score2", data=data)
+    # plt.show()
 
 
     # print(data.groupby([data["random_bool"], data["promotion_flag"]])["booking_bool"].count())
     # print(data.groupby([data["comp1_rate"], data["comp2_rate"]])["booking_bool"].count())
 
+    """ make plots """
     variables = ["promotion_flag", "random_bool", "prop_review_score", "prop_starrating", "prop_brand_bool"]
 
     # make plots for each variable
-    # for var in variables:
-    #     plot(var, data)
-    #
-    # ######################################################################
+    for var in variables:
+        # plot(var, data)
+        pass
 
-    # sns.countplot("srch_id", data=data) # duurt heeeel lang
-    # plt.show()
 
-    ######################################################################
-    # te veel bins, hoe dit verminderen?
-
+    """ only booked rooms """
 
     # filter hotels that were booked
     booked = data[data["booking_bool"] == 1]
 
     # try to find linear correlations: only click_bool correlates to booking_bool
     # print(data.corr()["booking_bool"])
-
-    predictors = [c for c in data.columns if c not in ["booking_bool","click_bool"]]
-    from sklearn.model_selection import cross_validate
-    from sklearn.ensemble import RandomForestClassifier
-    clf = RandomForestClassifier(n_estimators=10, min_weight_fraction_leaf=0.1)
-    scores = cross_validate(clf, data[predictors], data['booking_bool'], cv=3)
-    print(scores)
 
     # # countplot for countries that customers travel from
     # sns.countplot('visitor_location_country_id', data=booked, order=booked.visitor_location_country_id.value_counts().iloc[:10].index)

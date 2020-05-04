@@ -33,6 +33,58 @@ def shorten():
     df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
 
 
+def overview(df):
+    """
+    Overview of the data, returns numeric and categorical variables in list.
+    """
+    # summaries of categorical and numerical data
+    numeric_columns = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
+    categorical_columns = data.select_dtypes(include=["object", "category"]).columns.tolist()
+    print('numeric columns: ' + str(numeric_columns))
+    display_df(round(data[numeric_columns].describe(),2)) # MEMORYERROR
+    print('categorical columns: ' + str(categorical_columns))
+    # print(data[categorical_columns].describe())
+
+    return numeric_columns, categorical_columns
+
+
+def scale(data, vars):
+    """
+    Scale numerical values to values between -1 and 1.
+    """
+    scaler = StandardScaler()
+
+    for var in vars:
+        data[var] = data[var].astype("float64")
+        data[var] = scaler.fit_transform(data[var].values.reshape(-1, 1))
+
+    return data
+
+
+def missing_values(data):
+    """
+    Replace missing values by a sensible value, i.e. the mean value of individuals in the same group.
+    """
+    print("MISSING VALS BEFORE")
+    for col in data.columns.values:
+        if data[col].isnull().any():
+            print(f"Missing values in {col}")
+
+    # TODO: fillnas with e.g. mean value of comparable data group
+    # for var in numeric_columns:
+    #     data[var].fillna(data.groupby("booking_bool")[var].transform("mean"), inplace=True)
+
+    # now data is filled with the mean of the col
+    data = data.fillna(data.mean())
+
+    print("MISSING VALS AFTER")
+    for col in data.columns.values:
+        if data[col].isnull().any():
+            print(f"Missing values in {col}")
+
+    return data
+
+
 def drop_cols(df):
     """
     Drop variables that are not of interest.
@@ -47,6 +99,7 @@ if __name__ == "__main__":
 
     """ load data """
     df_train = pd.read_csv("data/training_short.csv")
+    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_test = pd.read_csv("data/test_short.csv")
 
 
@@ -55,35 +108,16 @@ if __name__ == "__main__":
 
 
     """ TODO: make cols categorical """
+    # zijn er uberhaupt categorische variabelen?
+    # data["Pclass"] = pd.Categorical(data.Pclass)
 
 
     """ overview of numerical and categorical data """
-    # summaries of categorical and numerical data
-    numeric_columns = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
-    categorical_columns = data.select_dtypes(include=["object", "category"]).columns.tolist()
-    print('numeric columns: ' + str(numeric_columns))
-    display_df(round(data[numeric_columns].describe(),2)) # MEMORYERROR
-    print('categorical columns: ' + str(categorical_columns))
-    # print(data[categorical_columns].describe())
+    numeric, categorical = overview(data)
 
 
-    """ missing values """
-    print("MISSING VALS BEFORE")
-    for col in data.columns.values:
-        if data[col].isnull().any():
-            print(f"Missing values in {col}")
-
-    # TODO: fillnas with mean value of comparable data group
-    # for var in numeric_columns:
-    #     data[var].fillna(data.groupby("booking_bool")[var].transform("mean"), inplace=True)
-
-    # now data is filled with the mean of the col
-    data = data.fillna(data.mean())
-
-    print("MISSING VALS AFTER")
-    for col in data.columns.values:
-        if data[col].isnull().any():
-            print(f"Missing values in {col}")
+    """ missing values (TODO) """
+    data = missing_values(data)
 
 
     """ TODO: combine competitor cols """
@@ -91,33 +125,29 @@ if __name__ == "__main__":
     # 3 available competitor variables (rates inv diff)?
     data["comprate"] = data.loc[:,['comp1_rate','comp2_rate','comp3_rate','comp4_rate',\
                         'comp5_rate','comp6_rate','comp7_rate','comp8_rate']].mean(axis=1)
-    print(data.comprate[:100])
 
 
     """ scaling numeric cols"""
-    scaler = StandardScaler()
-
-    for var in numeric_columns:
-        data[var] = data[var].astype("float64")
-        data[var] = scaler.fit_transform(data[var].values.reshape(-1, 1))
-
-    data.to_csv("data/training_scaled.csv", index=False)
+    data = scale(data, numeric)
+    # data.to_csv("data/training_preprocessed.csv")
 
 
     """ TODO: transform categorical variables """
+    # nvt als er geen categorische variabelen zijn
 
 
     """ optional: importance estimation """
+    # memoryerror for large dataset
+    # target = data['booking_bool'].values
+    # select_features = data.columns.values
+    #
+    # selector = SelectKBest(f_classif, len(select_features))
+    # selector.fit(data, target)
+    # scores = -np.log10(selector.pvalues_)
+    # indices = np.argsort(scores)[::-1]
+    #
+    # print('Features importance:')
+    # for i in range(len(scores)):
+    #     print('%.2f %s' % (scores[indices[i]], select_features[indices[i]]))
 
-    # multiple targets?
-    target = data['position'].values
-    select_features = data.columns.values
-
-    selector = SelectKBest(f_classif, len(select_features))
-    selector.fit(data, target)
-    scores = -np.log10(selector.pvalues_)
-    indices = np.argsort(scores)[::-1]
-
-    print('Features importance:')
-    for i in range(len(scores)):
-        print('%.2f %s' % (scores[indices[i]], select_features[indices[i]]))
+    # most important: click_bool > position > random_bool > prop_location_score2
