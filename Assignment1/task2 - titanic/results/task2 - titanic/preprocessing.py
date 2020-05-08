@@ -61,12 +61,12 @@ def add_titles(data):
             titles_cat.append("Miss")
         elif title in ["Mrs", "Mme"]:
             titles_cat.append("Mrs")
+        elif title in ["Capt", "Col", "Dr", "Major", "Rev"]:
+            titles_cat.append("Other")
         elif title == "Mr":
             titles_cat.append(title)
         elif title == "Master":
             titles_cat.append(title)
-        else:
-            titles_cat.append("Other")
 
     data["Title"] = titles_cat
 
@@ -132,8 +132,7 @@ def missing_values(data):
     # check for missing values: Age, Cabin, Embarked
     for col in data.columns.values:
         if data[col].isnull().any():
-            # print(f"Missing values in {col}")
-            pass
+            print(f"Missing values in {col}")
 
     # replace missing age by mean of same title
     data["Age"].fillna(data.groupby("Title")["Age"].transform("mean"), inplace=True)
@@ -151,13 +150,11 @@ def preprocess(df):
     """
     Preprocess the data set using all specified functions.
     """
+
     df = change_sex(df)
     df = is_alone(df)
     df = add_titles(df)
     df = family_size(df)
-
-    # if drop:
-    #     df = drop_uninteresting(df)
 
     df = missing_values(df)
     df = drop_uninteresting(df)

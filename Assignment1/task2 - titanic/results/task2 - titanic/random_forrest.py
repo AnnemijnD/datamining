@@ -11,6 +11,16 @@ import time
 from tqdm import tqdm
 
 
+# load preprocessed data
+df_train, df_test = prep.run_both()
+df_test, X_train, y_train, X_test = prepare_data_for_model()
+
+# remove passenger ID variable but save IDs for test set
+df_train = df_train.drop(columns=['PassengerId'])
+pass_id_test = df_test['PassengerId']
+df_test = df_test.drop(columns=['PassengerId'])
+
+
 def prediction(X_train, y_train, pass_id_test, X_test):
     """
     Make a prediction for the test set survival.
@@ -24,8 +34,6 @@ def prediction(X_train, y_train, pass_id_test, X_test):
     prediction_test_set = random_forest.predict(X_test).round(0).astype(int)
     predictions = pd.DataFrame({'PassengerId': pass_id_test, 'Survived': prediction_test_set})
     predictions.to_csv('solutions/prediction_random_forrest_prep_min.csv', index=False)
-
-    return score
 
 
 def param_tuning(X_train, y_train):
@@ -103,18 +111,46 @@ def model_testing(X_train, y_train):
     # plt.savefig("-" + str(runs) + "runs.png")
     plt.show()
 
-if __name__ == "__main__":
+# param_tuning(X_train, y_train)
+# prediction(X_train, y_train, pass_id_test, X_test)
+model_testing(X_train, y_train)
+# round_survival()
 
-    # load preprocessed data
-    df_train, df_test = prep.run_both()
-    df_test, X_train, y_train, X_test = prepare_data_for_model()
+# # DIT HEEFT 63% GOED VOORSPELD, MET SIBSP ERBIJ 64 --> ALLEBEI ERG MATIG
+# y = train_data["Survived"]
+#
+# features = ["Pclass", "Sex", "Parch", "SibSp"]
+# X = pd.get_dummies(train_data[features])
+# X_test = pd.get_dummies(test_data[features])
+#
+# print(X.columns)
+#
+# neigh = KNeighborsClassifier(n_neighbors=5)
+# neigh.fit(X, y)
+#
+# correct = 0
+# incorrect = 0
+# for index, row in X.iterrows():
+#     pclass = row['Pclass']
+#     sex_f = row['Sex_1']
+#     sex_m = row['Sex_0']
+#     parch = row['Parch']
+#     sibsp = row['SibSp']
+#     prediction = neigh.predict([[pclass, sex_f, sex_m, parch, sibsp]])
+#
+#     survived = train_data['Survived'][index]
+#
+#     if prediction == survived:
+#         correct +=1
+#     else:
+#         incorrect += 1
+#
+# print(correct*100/(incorrect+correct))
 
-    # remove passenger ID variable but save IDs for test set
-    df_train = df_train.drop(columns=['PassengerId'])
-    pass_id_test = df_test['PassengerId']
-    df_test = df_test.drop(columns=['PassengerId'])
 
-    # param_tuning(X_train, y_train)
-    # prediction(X_train, y_train, pass_id_test, X_test)
-    model_testing(X_train, y_train)
-    # round_survival()
+# # TODO Dit is leuk bij exploratie erbij misschien!!!!
+# alone = df_train.loc[df_train.alone == 0]["Survived"]
+# not_alone = df_train.loc[df_train.alone == 1]["Survived"]
+# rate_alone = sum(alone)/len(alone) # halve survived
+# rate_not_alone = sum(not_alone)/len(not_alone) # 30% survived
+# # print(rate_alone, rate_not_alone)
