@@ -62,6 +62,7 @@ def backward_selection_heuristic(e_train, v):
 
 
 if __name__ == "__main__":
+    
     # load data
     train_data = pd.read_csv("data/train.csv")
     test_data = pd.read_csv("data/test.csv")

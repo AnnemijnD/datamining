@@ -211,5 +211,5 @@ if __name__ == "__main__":
     X_test = X_test.drop(columns=['PassengerId'])
     # create_model()
     model_testing()
-    # create_prediction(df_test, X_train, y_train, X_test)
-    # param_testing(X_train, y_train)
+    create_prediction(df_test, X_train, y_train, X_test)
+    param_testing(X_train, y_train)
