@@ -7,6 +7,7 @@ from sklearn.feature_selection import SelectKBest, f_classif
 from IPython.display import display
 import time
 from tqdm import tqdm
+import random
 
 
 def display_df(df):
@@ -109,13 +110,60 @@ def prep_data(df_train, df_test):
 
     return df_train, df_test
 
+def add_category(df):
+    """
+    Add a category based on whether it is booked and clicked, only clicked or neither
+    """
+    categories = []
+    for index, row in df.iterrows():
+        booked = row['booking_bool']
+        clicked = row['click_bool']
+        if booked:
+            category = 0
+        elif clicked:
+            category = 1
+        else:
+            category = 2
+        categories.append(category)
+    df["category"] = categories
+
+    df.to_csv("data/test_category.csv")
+
+
+def get_train_data():
+    """
+    Select 8% of the  data based on the categories
+    """
+    df = pd.read_csv("data/train_category.csv")
+
+    cat0 = df[df.category == 0].index
+    cat1 = df[df.category == 1].index
+    cat2 = df[df.category == 2].index
+    cat2_selec = np.random.choice(cat2, 223125, replace=False)
+
+    cat012 = np.concatenate((cat0, cat1, cat2_selec))
+
+    df_selection = df.loc[cat012]
+
+    df_selection.to_csv("data/train_selection.csv")
+
+    print(len(df_selection))
+
 if __name__ == "__main__":
 
     """ load data """
-    df_train = pd.read_csv("data/training_short.csv")
+    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    # df_train = pd.read_csv("data/training_short.csv")
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_test = pd.read_csv("data/test_short.csv")
+    df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
+    """ add category column """
+    add_category(df_test)
+    # df_train.to_csv("data/train_category.csv")
+    # get_train_data()
+
+    pass
 
     """ drop cols """
     data = drop_cols(df_train)

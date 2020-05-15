@@ -64,15 +64,18 @@ def create_prediction(df_test, X_train, y_train, X_test):
     # df_test['Survived'] = df_test['Survived'].apply(lambda x: round(x, 0)).astype('int')
     solution = df_test[['prop_id', 'srch_id', 'booking']]
     # solution.to_csv("unsorted.csv", index=False)
-    solution.sort_values(by='booking', ascending=False).to_csv("sorted.csv", index=False)
+    solution = solution.sort_values(by='booking', ascending=False)
+    solution = solution.drop("booking", axis=1)
+    solution.to_csv("output/selection0_out.csv", index=False)
 
 
     return val_acc
 
-df_train = pd.read_csv("data/training_short.csv")
+df_train = pd.read_csv("data/train_selection.csv")
+# df_train = pd.read_csv("data/training_short.csv")
 # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-df_test = pd.read_csv("data/test_short.csv")
-# df_test = pd.read_csv("data/test_set_VU_DM.csv")
+# df_test = pd.read_csv("data/test_short.csv")
+df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
 data, df_test = prep_data(df_train, df_test)
 predictors = [c for c in data.columns if c not in ["booking_bool","click_bool","gross_bookings_usd","position"]]
