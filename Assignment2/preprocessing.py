@@ -48,6 +48,45 @@ def overview(data):
     return numeric_columns, categorical_columns
 
 
+def add_category(df):
+    """
+    Add a category based on whether it is booked and clicked, only clicked or neither.
+    """
+    categories = []
+    for index, row in df.iterrows():
+        booked = row['booking_bool']
+        clicked = row['click_bool']
+        if booked:
+            category = 5
+        elif clicked:
+            category = 1
+        else:
+            category = 0
+        categories.append(category)
+    df["category"] = categories
+
+    return df
+
+
+def get_train_data(df):
+    """
+    Select 8% of the  data based on the categories.
+    """
+
+    cat0 = df[df.category == 5].index
+    cat1 = df[df.category == 1].index
+    cat2 = df[df.category == 0].index
+    amount = int(len(df) * .8)
+    print("amount of rows selected: ", amount)
+    cat2_selec = np.random.choice(cat2, amount, replace=False)
+
+    cat012 = np.concatenate((cat0, cat1, cat2_selec))
+
+    df_selection = df.loc[cat012]
+
+    return df_selection
+
+
 def scale(data, vars):
     """
     Scale numerical values to values between -1 and 1.
@@ -55,8 +94,9 @@ def scale(data, vars):
     scaler = StandardScaler()
 
     for var in vars:
-        data[var] = data[var].astype("float64")
-        data[var] = scaler.fit_transform(data[var].values.reshape(-1, 1))
+        if var not in ["prop_id","srch_id"]:
+            data[var] = data[var].astype("float64")
+            data[var] = scaler.fit_transform(data[var].values.reshape(-1, 1))
 
     return data
 
@@ -98,6 +138,8 @@ def drop_cols(df, uninteresting):
 def prep_data(df_train, df_test):
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
     df_train = drop_cols(df_train, uninteresting)
+    df_train = add_category(df_train)
+    df_train = get_train_data(df_train)
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
     df_test = drop_cols(df_test, uninteresting)
     numeric_train, categorical_train = overview(df_train)
@@ -116,9 +158,16 @@ if __name__ == "__main__":
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_test = pd.read_csv("data/test_short.csv")
 
+    """ append category column to trainig set """
+    df_train = add_category(df_train)
+
+    """ downsample data based on categories """
+    df_train = get_train_data(df_train)
+
 
     """ drop cols """
-    data = drop_cols(df_train)
+    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    data = drop_cols(df_train, uninteresting)
 
 
     """ TODO: make cols categorical """

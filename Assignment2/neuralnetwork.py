@@ -60,26 +60,36 @@ def create_prediction(df_test, X_train, y_train, X_test):
     print("NN model validation accuracy during training: ", val_acc)
 
     # calculate predictions for test dataset
-    df_test['booking'] = model.predict(X_test)
-    # df_test['Survived'] = df_test['Survived'].apply(lambda x: round(x, 0)).astype('int')
-    solution = df_test[['prop_id', 'srch_id', 'booking']]
-    # solution.to_csv("unsorted.csv", index=False)
-    solution.sort_values(by='booking', ascending=False).to_csv("sorted.csv", index=False)
+    df_test['category'] = model.predict(X_test)
+    solution = df_test[['prop_id', 'srch_id', 'category']]
 
+    # save prediction in output file
+    solution.sort_values(by='category', ascending=False).to_csv("sorted.csv", index=False)
 
     return val_acc
 
-df_train = pd.read_csv("data/training_short.csv")
+
+# load data
+df_train = pd.read_csv("short_train_sel.csv")
 # df_train = pd.read_csv("data/training_set_VU_DM.csv")
 df_test = pd.read_csv("data/test_short.csv")
 # df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
+# preprocess data
 data, df_test = prep_data(df_train, df_test)
-predictors = [c for c in data.columns if c not in ["booking_bool","click_bool","gross_bookings_usd","position"]]
 
+# predicting columns of training set
+predictors = [c for c in data.columns if c not in ["prop_id","srch_id","booking_bool",\
+                            "click_bool","gross_bookings_usd","position","category"]]
 X_train = data[predictors]
-X_test = df_test
-y_train = data.booking_bool.astype(int)
-# create_model()
 
+# predicting columns of test set
+cols = [col for col in df_test.columns if col not in ['prop_id', 'srch_id']]
+X_test = df_test[cols]
+
+# prediction (outcome) variable
+y_train = data.category.astype(int)
+
+
+# create_model()
 create_prediction(df_test, X_train, y_train, X_test)
