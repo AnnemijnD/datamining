@@ -66,17 +66,17 @@ def create_prediction(df_test, X_train, y_train, X_test):
     # save prediction in output file
     solution.sort_values(by='category', ascending=False).to_csv("sorted3.csv", index=False)
 
-    # TODO: laatste kolom category eraf halen, dit werkt niet 
+    # TODO: laatste kolom category eraf halen, dit werkt niet
     # sorted_sol = solution.sort_values(by='category', ascending=False)
     # sol = sorted_sol.drop("category", axis=1, inplace=True)
     # sol.to_csv("sorted2.csv", index=False)
 
     return val_acc
 
-df_train = pd.read_csv("data/training_short.csv")
+df_train = pd.read_csv("data/train_selection.csv")
 # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-df_test = pd.read_csv("data/test_short.csv")
-# df_test = pd.read_csv("data/test_set_VU_DM.csv")
+# df_test = pd.read_csv("data/test_short.csv")
+df_test = pd.read_csv("data/test_category.csv")
 
 # preprocess data
 data, df_test = prep_data(df_train, df_test)
