@@ -64,7 +64,8 @@ def create_prediction(df_test, X_train, y_train, X_test):
     solution = df_test[['prop_id', 'srch_id', 'category']]
 
     # save prediction in output file
-    solution.sort_values(by='category', ascending=False).to_csv("sorted.csv", index=False)
+    sorted_sol = solution.sort_values(by='category', ascending=False)
+    sorted_sol.drop("category", axis=1, inplace=True).to_csv("sorted2.csv", index=False)
 
     return val_acc
 

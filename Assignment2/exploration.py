@@ -40,37 +40,6 @@ def plot(var, data):
 
     plt.show()
 
-def plot_2(var, data):
-    """
-    Makes a plot for the booked fraction of a variable of the training data set.
-    """
-    var_names = {"promotion_flag": "Promotion", "random_bool": "Random",\
-                "prop_review_score": "Review score", "prop_starrating": "Star rating",\
-                "prop_brand_bool": "Large brand", "prop_location_score1": "Location score 1",\
-                "prop_location_score2": "Location score 1"}
-
-    sns.barplot(x=var, y="booking_bool", hue="comp1_rate", data=data, color="b",\
-                capsize=.1, errwidth=1.1).tick_params(labelsize=18)
-
-    # plot style properties
-    ax = plt.gca()
-
-    for ax in plt.gcf().axes:
-        x = ax.get_xlabel()
-        y = ax.get_ylabel()
-        ax.set_xlabel(x, fontsize=20)
-        ax.set_ylabel(y, fontsize=20)
-
-    plt.title("Bookings for variable " + str(var), fontsize=22)
-    plt.ylabel("Fraction")
-    plt.xlabel(var_names[var])
-    t = ax.title
-    t.set_position([.5, 1.05])
-    # plt.ylim([0, 1])
-    plt.subplots_adjust(bottom=.15, left=.15)
-    plt.savefig("results/booking_" + str(var) + ".png", bbox_inches="tight")
-
-    # plt.show()
 
 if __name__ == "__main__":
 
@@ -137,5 +106,4 @@ if __name__ == "__main__":
     # plt.savefig("results/hotel_locations.png", bbox_inches="tight")
     # plt.show()
 
-###"""""""""""""""""""""""""""""""""""""###############################"
-    print(data.info())
+    # print(data.info())

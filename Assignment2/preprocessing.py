@@ -77,7 +77,7 @@ def get_train_data(df):
     cat0 = df[df.category == 5].index
     cat1 = df[df.category == 1].index
     cat2 = df[df.category == 0].index
-    amount = int(len(df) * .8)
+    amount = int(len(df) * .04)
     print("amount of rows selected: ", amount)
     cat2_selec = np.random.choice(cat2, amount, replace=False)
 
@@ -152,44 +152,7 @@ def prep_data(df_train, df_test):
 
     return df_train, df_test
 
-def add_category(df):
-    """
-    Add a category based on whether it is booked and clicked, only clicked or neither
-    """
-    categories = []
-    for index, row in df.iterrows():
-        booked = row['booking_bool']
-        clicked = row['click_bool']
-        if booked:
-            category = 0
-        elif clicked:
-            category = 1
-        else:
-            category = 2
-        categories.append(category)
-    df["category"] = categories
 
-    df.to_csv("data/test_category.csv")
-
-
-def get_train_data():
-    """
-    Select 8% of the  data based on the categories
-    """
-    df = pd.read_csv("data/train_category.csv")
-
-    cat0 = df[df.category == 0].index
-    cat1 = df[df.category == 1].index
-    cat2 = df[df.category == 2].index
-    cat2_selec = np.random.choice(cat2, 223125, replace=False)
-
-    cat012 = np.concatenate((cat0, cat1, cat2_selec))
-
-    df_selection = df.loc[cat012]
-
-    df_selection.to_csv("data/train_selection.csv")
-
-    print(len(df_selection))
 
 if __name__ == "__main__":
 
@@ -200,16 +163,6 @@ if __name__ == "__main__":
     # df_test = pd.read_csv("data/test_short.csv")
     df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
-    """ add category column """
-    add_category(df_test)
-    # df_train.to_csv("data/train_category.csv")
-    # get_train_data()
-
-    """ append category column to trainig set """
-    df_train = add_category(df_train)
-
-    """ downsample data based on categories """
-    df_train = get_train_data(df_train)
 
 
     """ drop cols """
@@ -218,16 +171,12 @@ if __name__ == "__main__":
 
 
     """ TODO: make cols categorical """
-    # zijn er uberhaupt categorische variabelen?
     # data["Pclass"] = pd.Categorical(data.Pclass)
 
 
     """ overview of numerical and categorical data """
     numeric, categorical = overview(data)
 
-
-    """ missing values (TODO) """
-    data = missing_values(data)
 
 
     """ TODO: combine competitor cols """
@@ -236,10 +185,6 @@ if __name__ == "__main__":
     data["comprate"] = data.loc[:,['comp1_rate','comp2_rate','comp3_rate','comp4_rate',\
                         'comp5_rate','comp6_rate','comp7_rate','comp8_rate']].mean(axis=1)
 
-
-    """ scaling numeric cols"""
-    data = scale(data, numeric)
-    # data.to_csv("data/training_preprocessed.csv")
 
 
     """ TODO: transform categorical variables """
