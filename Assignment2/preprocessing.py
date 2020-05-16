@@ -8,6 +8,7 @@ from IPython.display import display
 import time
 from tqdm import tqdm
 import random
+import math
 
 
 def display_df(df):
@@ -210,11 +211,11 @@ def combine_competitors(df):
 
     comp_cols = []
     for i in range(COMP):
-        comp_cols.append("comp{i + 1}_rate")
-        comp_cols.append("comp{i + 1}_inv")
-        comp_cols.append("comp{i + 1}_rate_percent_diff")
+        comp_cols.append(f"comp{i + 1}_rate")
+        comp_cols.append(f"comp{i + 1}_inv")
+        comp_cols.append(f"comp{i + 1}_rate_percent_diff")
 
-    df = df.drop(drop_cols, axis=1)
+    df = df.drop(comp_cols, axis=1)
     df["comp_rate"] = rates_col
     df["comp_inv"] = invs_col
     df["comp_perc"] = perc_col
@@ -246,8 +247,11 @@ if __name__ == "__main__":
 
 
     """ drop cols TODO: CHECK OF DIT ZO IS VOOR TRAIN EN TEST"""
-    # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
-    # data = drop_cols(df, uninteresting)
+    if clean == "train":
+        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    else:
+        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
+    data = drop_cols(df, uninteresting)
 
 
     """ TODO: make cols categorical """
