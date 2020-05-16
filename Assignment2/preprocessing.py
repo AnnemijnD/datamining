@@ -52,27 +52,33 @@ def overview(data):
 def add_category(df):
     """
     Add a category based on whether it is booked and clicked, only clicked or neither
+    Only need to run this function once!
     """
-    # categories = []
-    # for index, row in df.iterrows():
-    #     booked = row['booking_bool']
-    #     clicked = row['click_bool']
-    #     if booked:
-    #         category = 5
-    #     elif clicked:
-    #         category = 1
-    #     else:
-    #         category = 0
-    #     categories.append(category)
-    # df["category"] = categories
-    df["category"] = [0] * len(df) # deze alleen voor test!
+    categories = []
+    for index, row in df.iterrows():
+        booked = row['booking_bool']
+        clicked = row['click_bool']
+        if booked:
+            category = 5
+        elif clicked:
+            category = 1
+        else:
+            category = 0
+        categories.append(category)
+    df["category"] = categories
+    df.to_csv("data/train_category.csv", index=False)
 
-    df.to_csv("data/test_category.csv", index=False)
+    """
+    If test data needs extra row: comment above and uncomment below
+    """
+    # df["category"] = [0] * len(df)
+    # df.to_csv("data/train_category.csv", index=False)
 
 
 def get_train_data(df):
     """
     Select 8% of the  data based on the categories.
+    Only need to run this function once!
     """
 
     cat0 = df[df.category == 5].index
@@ -86,7 +92,7 @@ def get_train_data(df):
 
     df_selection = df.loc[cat012]
 
-    return df_selection
+    df_selection.to_csv("data/train_selection.csv", index=False)
 
 
 def scale(data, vars):
@@ -213,31 +219,35 @@ def combine_competitors(df):
     df["comp_inv"] = invs_col
     df["comp_perc"] = perc_col
 
+    return df
 
 if __name__ == "__main__":
+    """
+    RUN THIS FILE ONCE FOR train_selection AND FOR test_category
+    WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
+    After that the preprocessed data will be saved in "preprocessed_train.csv"
+    Make sure to delete the previous preprocessed file
+    """
 
-    """ load data """
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    # df_train = pd.read_csv("data/training_short.csv")
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_short.csv")
-    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    """ Select train or test """
+    clean = "train"
+    # clean = "test"
 
-    """ add category column """
-    # add_category(df_test)
+    """ load data you want to preprocess """
+    if clean == "train":
+        # df = pd.read_csv("data/train_selection.csv")
+        df = pd.read_csv("data/training_short.csv")
+    else:
+        # df = pd.read_csv("data/test_category.csv")
+        df = pd.read_csv("data/test_short.csv")
 
-
-    # df_train = pd.read_csv("data/train_category.csv")
-
-    # df_train = get_train_data(df_train)
-
-    # df_train.to_csv("data/train_selection.csv", index=False)
+    """ Combine competitor cols """
+    df = combine_competitors(df)
 
 
-
-    """ drop cols """
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
-    data = drop_cols(df_train, uninteresting)
+    """ drop cols TODO: CHECK OF DIT ZO IS VOOR TRAIN EN TEST"""
+    # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    # data = drop_cols(df, uninteresting)
 
 
     """ TODO: make cols categorical """
@@ -245,17 +255,7 @@ if __name__ == "__main__":
 
 
     """ overview of numerical and categorical data """
-    numeric, categorical = overview(data)
-
-
-
-    """ TODO: combine competitor cols """
-    # now mean is taken of comp_rates, do we want to make 1 competition score based on
-    # 3 available competitor variables (rates inv diff)?
-    data["comprate"] = data.loc[:,['comp1_rate','comp2_rate','comp3_rate','comp4_rate',\
-                        'comp5_rate','comp6_rate','comp7_rate','comp8_rate']].mean(axis=1)
-
-
+    # numeric, categorical = overview(data)
 
     """ TODO: transform categorical variables """
     # nvt als er geen categorische variabelen zijn
@@ -276,3 +276,7 @@ if __name__ == "__main__":
     #     print('%.2f %s' % (scores[indices[i]], select_features[indices[i]]))
 
     # most important: click_bool > position > random_bool > prop_location_score2
+
+
+    """ Save data in a csv file """
+    df.to_csv(f"data/preprocessed_{clean}.csv", index=False)
