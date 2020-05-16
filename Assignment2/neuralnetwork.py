@@ -68,12 +68,11 @@ def create_prediction(df_test, X_train, y_train, X_test):
 
     return val_acc
 
-
-# load data
-df_train = pd.read_csv("short_train_sel.csv")
+df_train = pd.read_csv("data/train_selection.csv")
+# df_train = pd.read_csv("data/training_short.csv")
 # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-df_test = pd.read_csv("data/test_short.csv")
-# df_test = pd.read_csv("data/test_set_VU_DM.csv")
+# df_test = pd.read_csv("data/test_short.csv")
+df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
 # preprocess data
 data, df_test = prep_data(df_train, df_test)
