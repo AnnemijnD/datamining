@@ -9,13 +9,14 @@ from keras.layers import Dense, Activation, Dropout
 from numpy.random import seed
 import tensorflow as tf
 import seaborn as sns
+import time
 from preprocessing import prep_data
 
 sns.set()
 sns.set_color_codes("pastel")
 
 
-def create_model(lyrs=[16], act="relu", opt='Adam', dr=0.2):
+def create_model(X_train, lyrs=[16], act="relu", opt='Adam', dr=0.2):
     """
     Creates neural network model with specified amount of layers and activation types.
     """
@@ -61,10 +62,13 @@ def create_prediction(df_test, X_train, y_train, X_test):
 
     # calculate predictions for test dataset
     df_test['category'] = model.predict(X_test)
+    print(df_test)
     solution = df_test[['prop_id', 'srch_id', 'category']]
 
+    date_time = time.strftime("%Y-%m-%d-%H-%M")
+    solution.to_csv("results/unsorted" + str(date_time) + ".csv", index=False)
     # save prediction in output file
-    solution.sort_values(by='category', ascending=False).to_csv("sorted3.csv", index=False)
+    solution.sort_values(by='category', ascending=False).to_csv("results/sorted" + str(date_time) + ".csv", index=False)
 
     # TODO: laatste kolom category eraf halen, dit werkt niet
     # sorted_sol = solution.sort_values(by='category', ascending=False)
@@ -110,9 +114,9 @@ def model_testing(X_train,y_train):
     """
 
     # for testing amount of layers, each layer has 32 neurons
-    layers = [[32], [32, 32], [32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32],\
+    layers = [[32, 32], [32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32],\
             [32, 32, 32, 32, 32], [32, 32, 32, 32, 32, 32]]
-    layers = [[1], [2], [4], [8], [16], [32], [64], [128], [256]]
+    # layers = [[1], [2], [4], [8], [16], [32], [64], [128], [256]]
 
     # activation = ["linear", "sigmoid", "relu", "softmax"]
     activation = ["linear", "relu"]
@@ -183,10 +187,11 @@ def param_testing(X_train, y_train):
     print(f'Accuracy: {round(grid.best_score_*100, 2)}%')
 
 
-# df_train = pd.read_csv("data/training_short.csv")
+# df_train = pd.read_csv("data/train_selection.csv")
 df_train = pd.read_csv("data/training_set_VU_DM.csv")
-df_test = pd.read_csv("data/test_short.csv")
-# df_test = pd.read_csv("data/test_set_VU_DM.csv")
+# df_test = pd.read_csv("data/test_short.csv")
+# df_train = pd.read_csv("data/training_short.csv")
+df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
 # preprocess data
 data, df_test = prep_data(df_train, df_test)
@@ -207,5 +212,5 @@ y_train = data.category.astype(int)
 """ functions """
 # create_model()
 # param_testing(X_train, y_train)
-model_testing(X_train, y_train)
-# create_prediction(df_test, X_train, y_train, X_test)
+# model_testing(X_train, y_train)
+create_prediction(df_test, X_train, y_train, X_test)
