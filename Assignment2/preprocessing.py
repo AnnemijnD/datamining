@@ -96,10 +96,11 @@ def drop_cols(df, uninteresting):
 
 
 def prep_data(df_train, df_test):
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
-    df_train = drop_cols(df_train, uninteresting)
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
-    df_test = drop_cols(df_test, uninteresting)
+    # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    # df_train = drop_cols(df_train, uninteresting)
+    # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
+    # df_test = drop_cols(df_test, uninteresting)
+
     numeric_train, categorical_train = overview(df_train)
     numeric_test, categorical_test = overview(df_test)
     df_train = missing_values(df_train)
@@ -112,11 +113,15 @@ def prep_data(df_train, df_test):
 if __name__ == "__main__":
 
     """ load data """
+    # shorten()
+
     df_train = pd.read_csv("data/train_selection.csv")
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_short.csv")
+    df_test = pd.read_csv("data/test_short.csv")
     print(df_train.columns)
     print(df_train.head().to_string())
+    exit()
+    
 
     """ drop cols """
     # data = drop_cols(df_train)
