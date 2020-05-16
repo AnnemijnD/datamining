@@ -15,7 +15,7 @@ sns.set()
 sns.set_color_codes("pastel")
 
 
-def create_model(X_train, lyrs=[32], act="relu", opt='Adam', dr=0.2):
+def create_model(lyrs=[16], act="relu", opt='Adam', dr=0.2):
     """
     Creates neural network model with specified amount of layers and activation types.
     """
@@ -66,15 +66,125 @@ def create_prediction(df_test, X_train, y_train, X_test):
     # save prediction in output file
     solution.sort_values(by='category', ascending=False).to_csv("sorted3.csv", index=False)
 
-    # TODO: laatste kolom category eraf halen, dit werkt niet 
+    # TODO: laatste kolom category eraf halen, dit werkt niet
     # sorted_sol = solution.sort_values(by='category', ascending=False)
     # sol = sorted_sol.drop("category", axis=1, inplace=True)
     # sol.to_csv("sorted2.csv", index=False)
 
     return val_acc
 
-df_train = pd.read_csv("data/training_short.csv")
-# df_train = pd.read_csv("data/training_set_VU_DM.csv")
+
+# def create_model_testing(lyrs=[32], act="relu", opt='Adam', dr=0.2):
+def create_model_testing(lyrs, act, opt='Adam', dr=0.2):
+    """
+    Creates neural network model with specified amount of layers and activation types.
+    """
+
+    # set random seed for reproducibility
+    seed(42)
+    tf.random.set_seed(42)
+
+    # create sequential model
+    model = Sequential()
+
+    # create first hidden layer
+    model.add(Dense(lyrs[0], input_dim=X_train.shape[1], activation=act))
+
+    # create additional hidden layers
+    for i in range(1,len(lyrs)):
+        model.add(Dense(lyrs[i], activation=act))
+
+    # add dropout, default is none
+    model.add(Dropout(dr))
+
+    # create output layer
+    model.add(Dense(1, activation="sigmoid"))  # output layer
+    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
+
+    return model
+
+
+def model_testing(X_train,y_train):
+    """
+    Run models with various activation methods and amounts of layers.
+    """
+
+    # for testing amount of layers, each layer has 32 neurons
+    layers = [[32], [32, 32], [32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32],\
+            [32, 32, 32, 32, 32], [32, 32, 32, 32, 32, 32]]
+    layers = [[1], [2], [4], [8], [16], [32], [64], [128], [256]]
+
+    # activation = ["linear", "sigmoid", "relu", "softmax"]
+    activation = ["linear", "relu"]
+    runs = 1
+    for i, act in enumerate(activation):
+        val_accs = []
+        for layer in layers:
+            acc_avg = []
+            for run in range(runs):
+                model = create_model_testing(layer, act)
+
+                # train model on full train set, with 80/20 CV split
+                training = model.fit(X_train, y_train, epochs=100, validation_split=0.2, verbose=0)
+                val_acc = np.mean(training.history['val_accuracy'])
+                print("Run ", run, " - ", act + " activation - layer " + str(layer))
+                acc_avg.append(val_acc)
+
+            # save average accuracy of runs
+            val_accs.append(round(np.mean(acc_avg)*100, 2))
+            print("accuracy: " + str(np.mean(acc_avg)))
+
+        # plot line for each activation method
+        plt.plot([1,2,4,8,16,32,64,128,256], val_accs, label=act)
+        # plt.plot(val_accs, label=act)
+
+    # plotting
+    plt.title("Accuracy of neural network model with different layers (N=" +\
+            str(len(layers)) + ")", fontsize=22)
+    plt.xlabel("Layers", fontsize=20)
+    # plt.xticks(np.arange(1, len(val_accs) + 1, 1), fontsize=18)
+    plt.ylabel("Accuracy (%)", fontsize=20)
+    plt.legend()
+    plt.subplots_adjust(bottom=.15, left=.15)
+    plt.savefig("results/32-linear-relu-" + str(runs) + "runs.png")
+    plt.show()
+
+
+def param_testing(X_train, y_train):
+    """
+    Hyperparameter tuning.
+    """
+
+    model = KerasClassifier(build_fn=create_model, verbose=0)
+
+    # define the grid search parameters
+    batch_size = [10, 50, 100]
+    epochs = [25, 50, 100]
+    dr = [0.0, 0.2, 0.4]
+    param_grid = dict(batch_size=batch_size, epochs=epochs, dr=dr)
+
+    # search the grid
+    grid = GridSearchCV(estimator=model,
+                        param_grid=param_grid,
+                        cv=5,
+                        verbose=0)
+
+    result = grid.fit(X_train, y_train)
+
+    means = result.cv_results_['mean_test_score']
+    stds = result.cv_results_['std_test_score']
+    params = result.cv_results_['params']
+
+    print(means)
+    print(stds)
+    print(params)
+
+    print(grid.best_params_)
+    print(f'Accuracy: {round(grid.best_score_*100, 2)}%')
+
+
+# df_train = pd.read_csv("data/training_short.csv")
+df_train = pd.read_csv("data/training_set_VU_DM.csv")
 df_test = pd.read_csv("data/test_short.csv")
 # df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
@@ -94,5 +204,8 @@ X_test = df_test[cols]
 y_train = data.category.astype(int)
 
 
+""" functions """
 # create_model()
-create_prediction(df_test, X_train, y_train, X_test)
+# param_testing(X_train, y_train)
+model_testing(X_train, y_train)
+# create_prediction(df_test, X_train, y_train, X_test)
