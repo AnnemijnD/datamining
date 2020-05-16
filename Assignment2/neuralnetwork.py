@@ -75,7 +75,7 @@ df_train = pd.read_csv("data/train_selection.csv")
 # df_train = pd.read_csv("data/training_short.csv")
 # df_train = pd.read_csv("data/training_set_VU_DM.csv")
 # df_test = pd.read_csv("data/test_short.csv")
-df_test = pd.read_csv("data/test_set_VU_DM.csv")
+df_test = pd.read_csv("data/test_category.csv")
 
 data, df_test = prep_data(df_train, df_test)
 predictors = [c for c in data.columns if c not in ["booking_bool","click_bool","gross_bookings_usd","position"]]
@@ -84,5 +84,8 @@ X_train = data[predictors]
 X_test = df_test
 y_train = data.booking_bool.astype(int)
 # create_model()
+
+print(X_train.columns, len(X_train.columns))
+print(X_test.columns, len(X_test.columns))
 
 create_prediction(df_test, X_train, y_train, X_test)

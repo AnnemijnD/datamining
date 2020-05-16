@@ -114,18 +114,19 @@ def add_category(df):
     """
     Add a category based on whether it is booked and clicked, only clicked or neither
     """
-    categories = []
-    for index, row in df.iterrows():
-        booked = row['booking_bool']
-        clicked = row['click_bool']
-        if booked:
-            category = 0
-        elif clicked:
-            category = 1
-        else:
-            category = 2
-        categories.append(category)
-    df["category"] = categories
+    # categories = []
+    # for index, row in df.iterrows():
+    #     booked = row['booking_bool']
+    #     clicked = row['click_bool']
+    #     if booked:
+    #         category = 0
+    #     elif clicked:
+    #         category = 1
+    #     else:
+    #         category = 2
+    #     categories.append(category)
+    # df["category"] = categories
+    df["category"] = [0] * len(df)
 
     df.to_csv("data/test_category.csv")
 
@@ -160,6 +161,7 @@ if __name__ == "__main__":
 
     """ add category column """
     add_category(df_test)
+
     # df_train.to_csv("data/train_category.csv")
     # get_train_data()
 
