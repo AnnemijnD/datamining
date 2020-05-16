@@ -8,6 +8,7 @@ from IPython.display import display
 import time
 from tqdm import tqdm
 import random
+import math
 
 
 def display_df(df):
@@ -51,7 +52,8 @@ def overview(data):
 
 def add_category(df):
     """
-    Add a category based on whether it is booked and clicked, only clicked or neither.
+    Add a category based on whether it is booked and clicked, only clicked or neither
+    Only need to run this function once!
     """
     categories = []
     for index, row in df.iterrows():
@@ -65,13 +67,19 @@ def add_category(df):
             category = 0
         categories.append(category)
     df["category"] = categories
+    df.to_csv("data/train_category.csv", index=False)
 
-    return df
+    """
+    If test data needs extra row: comment above and uncomment below
+    """
+    # df["category"] = [0] * len(df)
+    # df.to_csv("data/train_category.csv", index=False)
 
 
 def get_train_data(df):
     """
     Select 8% of the  data based on the categories.
+    Only need to run this function once!
     """
 
     cat0 = df[df.category == 5].index
@@ -85,7 +93,7 @@ def get_train_data(df):
 
     df_selection = df.loc[cat012]
 
-    return df_selection
+    df_selection.to_csv("data/train_selection.csv", index=False)
 
 
 def scale(data, vars):
@@ -153,21 +161,97 @@ def prep_data(df_train, df_test):
     return df_train, df_test
 
 
+def combine_competitors(df):
+    """
+    Set all NULL values to 0
+
+    Combine
+    For rate: sum the rate of the competitors
+    For inv: set 0 if at least one of them is zero
+    For percentage: sum(rate * percentage) / rate
+        (if rate is zero then don't divide)
+    """
+    COMP = 8
+    rates_col, invs_col, perc_col = [], [], []
+    for index, row in df.iterrows():
+        rates, invs, percentages = [], [], []
+        for i in range(COMP):
+            rate = row[f"comp{i + 1}_rate"]
+            inv = row[f"comp{i + 1}_inv"]
+            percentage = row[f"comp{i + 1}_rate_percent_diff"]
+            if math.isnan(rate):
+                rate = 0
+            if math.isnan(inv):
+                inv = 0
+            if math.isnan(percentage):
+                percentage = 0
+            else:
+                percentage = rate * percentage
+            rates.append(rate)
+            invs.append(inv)
+            percentages.append(percentage)
+
+        percentage = sum(percentages)
+        rate = sum(rates)
+
+        # determine percentage based on rate
+        if rate < 0:
+            percentage /= - rate
+        elif rate > 0:
+            percentage /= rate
+
+        if 0 in invs:
+            inv = 0
+        else:
+            inv = 1
+
+        rates_col.append(rate)
+        invs_col.append(inv)
+        perc_col.append(percentage)
+
+    comp_cols = []
+    for i in range(COMP):
+        comp_cols.append(f"comp{i + 1}_rate")
+        comp_cols.append(f"comp{i + 1}_inv")
+        comp_cols.append(f"comp{i + 1}_rate_percent_diff")
+
+    df = df.drop(comp_cols, axis=1)
+    df["comp_rate"] = rates_col
+    df["comp_inv"] = invs_col
+    df["comp_perc"] = perc_col
+
+    return df
 
 if __name__ == "__main__":
+    """
+    RUN THIS FILE ONCE FOR train_selection AND FOR test_category
+    WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
+    After that the preprocessed data will be saved in "preprocessed_train.csv"
+    Make sure to delete the previous preprocessed file
+    """
 
-    """ load data """
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    # df_train = pd.read_csv("data/training_short.csv")
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_short.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    """ Select train or test """
+    clean = "train"
+    # clean = "test"
+
+    """ load data you want to preprocess """
+    if clean == "train":
+        # df = pd.read_csv("data/train_selection.csv")
+        df = pd.read_csv("data/training_short.csv")
+    else:
+        # df = pd.read_csv("data/test_category.csv")
+        df = pd.read_csv("data/test_short.csv")
+
+    """ Combine competitor cols """
+    df = combine_competitors(df)
 
 
-
-    """ drop cols """
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
-    data = drop_cols(df_train, uninteresting)
+    """ drop cols TODO: CHECK OF DIT ZO IS VOOR TRAIN EN TEST"""
+    if clean == "train":
+        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    else:
+        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
+    data = drop_cols(df, uninteresting)
 
 
     """ TODO: make cols categorical """
@@ -175,17 +259,7 @@ if __name__ == "__main__":
 
 
     """ overview of numerical and categorical data """
-    numeric, categorical = overview(data)
-
-
-
-    """ TODO: combine competitor cols """
-    # now mean is taken of comp_rates, do we want to make 1 competition score based on
-    # 3 available competitor variables (rates inv diff)?
-    data["comprate"] = data.loc[:,['comp1_rate','comp2_rate','comp3_rate','comp4_rate',\
-                        'comp5_rate','comp6_rate','comp7_rate','comp8_rate']].mean(axis=1)
-
-
+    # numeric, categorical = overview(data)
 
     """ TODO: transform categorical variables """
     # nvt als er geen categorische variabelen zijn
@@ -206,3 +280,7 @@ if __name__ == "__main__":
     #     print('%.2f %s' % (scores[indices[i]], select_features[indices[i]]))
 
     # most important: click_bool > position > random_bool > prop_location_score2
+
+
+    """ Save data in a csv file """
+    df.to_csv(f"data/preprocessed_{clean}.csv", index=False)
