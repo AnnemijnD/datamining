@@ -115,13 +115,17 @@ if __name__ == "__main__":
     """ load data """
     # shorten()
 
+    # df_train = pd.read_csv("data/train_selection.csv")
     df_train = pd.read_csv("data/train_selection.csv")
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_short.csv")
-    print(df_train.columns)
-    print(df_train.head().to_string())
+    # df_test = pd.read_csv("data/test_short.csv")
+    df_train = df_train.sort_values(by=['srch_id'])
+    print(df_train["srch_id"].to_string())
     exit()
-    
+    # print(df_train.columns)
+    # print(df_train.head().to_string())
+    # exit()
+
 
     """ drop cols """
     # data = drop_cols(df_train)
