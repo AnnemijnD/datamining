@@ -7,6 +7,8 @@ from sklearn.feature_selection import SelectKBest, f_classif
 from IPython.display import display
 import time
 from tqdm import tqdm
+import random
+import math
 
 
 def display_df(df):
@@ -23,14 +25,15 @@ def shorten():
     """
 
     # load data
-    df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    df_test.sort_values("srch_id")
-    print(df_train.head(10))
-    print(df_test.head(10))
+    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    df_train = pd.read_csv("data/train_selection.csv")
+    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
-    df_train.sample(n=1000).to_csv("data/training_short.csv", index=False)
-    df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
+    print(df_train.head(10))
+    # print(df_test.head(10))
+
+    df_train.sample(n=1000).to_csv("data/train_selection_short.csv", index=False)
+    # df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
 
 
 def overview(data):
@@ -65,8 +68,7 @@ def add_category(df):
             category = 0
         categories.append(category)
     df["category"] = categories
-    # return df
-    df.to_csv("data/train_category.csv", index=False)
+    # df.to_csv("data/train_category.csv", index=False)
 
     """
     If test data needs extra row: comment above and uncomment below
@@ -106,7 +108,7 @@ def get_train_data(df):
     df_selection = df.loc[cat012]
 
     # df_selection.to_csv("data/train_selection.csv", index=False)
-
+    return df_selection
 
 def scale(data, vars):
     """
@@ -163,10 +165,15 @@ def prep_data(df_train, df_test):
 
     numeric_train, categorical_train = overview(df_train)
     numeric_test, categorical_test = overview(df_test)
+
     df_train = missing_values(df_train)
     df_test = missing_values(df_test)
+
     df_train = scale(df_train, numeric_train)
     df_test = scale(df_test, numeric_test)
+
+    df_train = combine_competitors(df_train)
+    df_test = combine_competitors(df_test)
 
     return df_train, df_test
 
@@ -192,7 +199,6 @@ def count_per_hotel(df):
 def combine_competitors(df):
     """
     Set all NULL values to 0
-
     Combine
     For rate: sum the rate of the competitors
     For inv: set 0 if at least one of them is zero
@@ -239,11 +245,11 @@ def combine_competitors(df):
 
     comp_cols = []
     for i in range(COMP):
-        comp_cols.append("comp{i + 1}_rate")
-        comp_cols.append("comp{i + 1}_inv")
-        comp_cols.append("comp{i + 1}_rate_percent_diff")
+        comp_cols.append(f"comp{i + 1}_rate")
+        comp_cols.append(f"comp{i + 1}_inv")
+        comp_cols.append(f"comp{i + 1}_rate_percent_diff")
 
-    df = df.drop(drop_cols, axis=1)
+    df = df.drop(comp_cols, axis=1)
     df["comp_rate"] = rates_col
     df["comp_inv"] = invs_col
     df["comp_perc"] = perc_col
@@ -288,20 +294,10 @@ if __name__ == "__main__":
     # df = combine_competitors(df)
 
 
-    """ drop cols TODO: CHECK OF DIT ZO IS VOOR TRAIN EN TEST"""
-    # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
-    # data = drop_cols(df, uninteresting)
 
 
     """ TODO: make cols categorical """
     # data["Pclass"] = pd.Categorical(data.Pclass)
-
-
-    """ overview of numerical and categorical data """
-    # numeric, categorical = overview(data)
-
-    """ TODO: transform categorical variables """
-    # nvt als er geen categorische variabelen zijn
 
 
     """ optional: importance estimation """
