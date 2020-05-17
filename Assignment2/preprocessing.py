@@ -67,14 +67,14 @@ def add_category(df):
             category = 0
         categories.append(category)
     df["category"] = categories
-    df.to_csv("data/train_category.csv", index=False)
+    # df.to_csv("data/train_category.csv", index=False)
 
     """
     If test data needs extra row: comment above and uncomment below
     """
     # df["category"] = [0] * len(df)
     # df.to_csv("data/train_category.csv", index=False)
-
+    return df
 
 def get_train_data(df):
     """
@@ -93,8 +93,8 @@ def get_train_data(df):
 
     df_selection = df.loc[cat012]
 
-    df_selection.to_csv("data/train_selection.csv", index=False)
-
+    # df_selection.to_csv("data/train_selection.csv", index=False)
+    return df_selection
 
 def scale(data, vars):
     """
@@ -145,10 +145,12 @@ def drop_cols(df, uninteresting):
 
 
 def prep_data(df_train, df_test):
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    df_train = add_category(df_train)
+    df_train = get_train_data(df_train)
+
+    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "click_bool", "booking_bool", "gross_bookings_usd"]
     df_train = drop_cols(df_train, uninteresting)
-    # df_train = add_category(df_train)
-    # df_train = get_train_data(df_train)
+
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
     df_test = drop_cols(df_test, uninteresting)
     numeric_train, categorical_train = overview(df_train)
@@ -157,8 +159,9 @@ def prep_data(df_train, df_test):
     df_test = missing_values(df_test)
     df_train = scale(df_train, numeric_train)
     df_test = scale(df_test, numeric_test)
+
     df_train = combine_competitors(df_train)
-    df_test = combine_competitiors(df_test)
+    df_test = combine_competitors(df_test)
 
     return df_train, df_test
 
@@ -166,7 +169,6 @@ def prep_data(df_train, df_test):
 def combine_competitors(df):
     """
     Set all NULL values to 0
-
     Combine
     For rate: sum the rate of the competitors
     For inv: set 0 if at least one of them is zero
@@ -224,32 +226,6 @@ def combine_competitors(df):
 
     return df
 
-
-def fill_missing_data(df):
-    """
-    Add values for the missing data per column
-    """
-
-    """ prop_review_score """
-    # print(df["prop_review_score"].isnull())
-
-    nan_indices = df.loc[df["prop_review_score"].isnull()]
-    
-    print(nan_indices)
-    for i in range(len(nan_indices)):
-        print(nan_indices[i])
-        df.at[i, "prop_review_score"] = -1
-        # df["prop_review_score"][i] = -1
-
-        # df["prop_review_score"][i] = -1
-
-    print(df["prop_review_score"][217])
-
-    print(set(df["prop_review_score"]))
-
-
-
-
 if __name__ == "__main__":
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
@@ -270,15 +246,11 @@ if __name__ == "__main__":
         # df = pd.read_csv("data/test_category.csv")
         df = pd.read_csv("data/test_short.csv")
 
-    """ Add missing values """
-    fill_missing_data(df)
-
-
     """ Combine competitor cols """
     df = combine_competitors(df)
 
 
-    """ drop cols """
+    """ drop cols TODO: CHECK OF DIT ZO IS VOOR TRAIN EN TEST"""
     if clean == "train":
         uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
     else:
