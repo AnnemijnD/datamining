@@ -63,19 +63,15 @@ def create_prediction(df_test, X_train, y_train, X_test):
     # calculate predictions for test dataset
     df_test['category'] = model.predict(X_test)
     print(df_test.head())
-    solution = df_test[['prop_id', 'srch_id', 'category']]
+    solution = df_test[['srch_id', 'prop_id', 'category']]
 
     date_time = time.strftime("%Y-%m-%d-%H-%M")
     solution.to_csv("results/unsorted" + str(date_time) + ".csv", index=False)
+
     # save prediction in output file
     solution = solution.sort_values(by='category', ascending=False)
     solution = solution.drop("category", axis=1)
     solution.to_csv("results/sorted" + str(date_time) + ".csv", index=False)
-
-    # TODO: laatste kolom category eraf halen, dit werkt niet
-    # sorted_sol = solution.sort_values(by='category', ascending=False)
-    # sol = sorted_sol.drop("category", axis=1, inplace=True)
-    # sol.to_csv("sorted2.csv", index=False)
 
     return val_acc
 
