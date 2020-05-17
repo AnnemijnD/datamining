@@ -93,14 +93,24 @@ def add_category(df):
 
 
 def add_searchorder(df):
+    """
+    Adds columns (number of items in search, number of times hotel  is booked,
+                    rank of item in search)
+        Args:
+            df (pandas dataframe)
 
-    df = pd.read_csv("data/test_set_VU_DM.csv")
+        Returns
+            df (pandas dataframe )
+    """
+    # add column n_search n_srchitems
     df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
-    df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
-    df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
-    # print(df[["srch_id", "prop_id", "n_srchitems","n_booked", "srch_rank"]].to_string())
 
-    # df.to_csv("data/1_BIG_test.csv")
+    # add column n_booked
+    df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
+
+    # add collumn srch_rank
+    df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
+
     print(df.shape)
 
     return df
@@ -178,6 +188,7 @@ def drop_cols(df, uninteresting):
     return df
 
 
+<<<<<<< HEAD
 def count_per_hotel(df):
     hotel_dict = {}
     df["hotelcount"] = 0
@@ -197,6 +208,35 @@ def count_per_hotel(df):
 
     return df
 
+=======
+def prep_data(df_train, df_test):
+    # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    # df_train = drop_cols(df_train, uninteresting)
+    # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
+    # df_test = drop_cols(df_test, uninteresting)
+
+    df_train = combine_competitors(df_train)
+    df_test = combine_competitors(df_test)
+
+    numeric_train, categorical_train = overview(df_train)
+    print(numeric_train)
+    numeric_test, categorical_test = overview(df_test)
+    print(numeric_test)
+
+    # avoid scaling of boolean variables and important id's
+    for boolean in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
+        numeric_train.remove(boolean)
+        numeric_test.remove(boolean)
+
+    df_train = missing_values(df_train)
+    df_test = missing_values(df_test)
+
+    df_train = scale(df_train, numeric_train)
+    df_test = scale(df_test, numeric_test)
+
+
+    return df_train, df_test
+>>>>>>> 13f00e154ac869fcc11724fc19ac62e8b7473146
 
 def combine_competitors(df):
     """
@@ -303,11 +343,62 @@ if __name__ == "__main__":
     Make sure to delete the previous preprocessed file
     """
 
-    # load data to preprocess
-    df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_short.csv")
-    # df_train = pd.read_csv("data/training_short.csv")
+    """ Select train or test """
+
+    clean = "test"
+    # clean = "test"
+    # df = pd.read_csv("data/fake_data/training_fake.csv")
+    df = pd.read_csv(f"data/{clean}_set_VU_DM.csv")
+    df = add_searchorder(df)
+
+    # save file
+    df.to_csv(f"data/BIG_{clean}.csv", index=False)
+
+    # df = df.sort_values(by="prop_id")
+    # df = count_per_hotel(df)
+    # add_category(df)
+    # df = get_train_data(df)
+    # exit()
+
+    # """ load data you want to preprocess """
+    # if clean == "train":
+    #     # df = pd.read_csv("data/train_selection.csv")
+    #     df = pd.read_csv("data/training_short.csv")
+    #     df = df.sort_values(by="srch_id")
+    #
+    # else:
+    #     # df = pd.read_csv("data/test_category.csv")
+    #     df = pd.read_csv("data/test_short.csv")
+
+    # df = add_searchorder(df)
+
+
+
+    """ Combine competitor cols """
+    # df = combine_competitors(df)
+
+
+
+
+    """ TODO: make cols categorical """
+    # data["Pclass"] = pd.Categorical(data.Pclass)
+
+
+    """ optional: importance estimation """
+    # memoryerror for large dataset
+    # target = data['booking_bool'].values
+    # select_features = data.columns.values
+    #
+    # selector = SelectKBest(f_classif, len(select_features))
+    # selector.fit(data, target)
+    # scores = -np.log10(selector.pvalues_)
+    # indices = np.argsort(scores)[::-1]
+    #
+    # print('Features importance:')
+    # for i in range(len(scores)):
+    #     print('%.2f %s' % (scores[indices[i]], select_features[indices[i]]))
+
+    # most important: click_bool > position > random_bool > prop_location_score2
 
     df_train, df_test = prep_data(df_train, df_test)
 
