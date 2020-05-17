@@ -91,6 +91,18 @@ def add_category(df):
         categories.append(category)
     df["category"] = categories
 
+
+def add_searchorder(df):
+
+    df = pd.read_csv("data/test_set_VU_DM.csv")
+    df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
+    df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
+    df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
+    # print(df[["srch_id", "prop_id", "n_srchitems","n_booked", "srch_rank"]].to_string())
+
+    # df.to_csv("data/1_BIG_test.csv")
+    print(df.shape)
+    
     return df
 
 
@@ -100,11 +112,13 @@ def get_train_data(df):
     Only need to run this function once!
     """
 
+    srch_order = []
     cat0 = df[df.category == 5].index
     cat1 = df[df.category == 1].index
     cat2 = df[df.category == 0].index
     amount = int(len(df) * .04)
     print("amount of rows selected: ", amount)
+
     cat2_selec = np.random.choice(cat2, amount, replace=False)
 
     cat012 = np.concatenate((cat0, cat1, cat2_selec))
@@ -121,9 +135,8 @@ def scale(data, vars):
     scaler = StandardScaler()
 
     for var in vars:
-        if var not in ["prop_id","srch_id"]:
-            data[var] = data[var].astype("float64")
-            data[var] = scaler.fit_transform(data[var].values.reshape(-1, 1))
+        data[var] = data[var].astype("float64")
+        data[var] = scaler.fit_transform(data[var].values.reshape(-1, 1))
 
     return data
 
@@ -166,14 +179,10 @@ def drop_cols(df, uninteresting):
 
 
 def prep_data(df_train, df_test):
-    df_train = add_category(df_train)
-    df_train = get_train_data(df_train)
-
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "click_bool", "booking_bool", "gross_bookings_usd"]
-    df_train = drop_cols(df_train, uninteresting)
-
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
-    df_test = drop_cols(df_test, uninteresting)
+    # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    # df_train = drop_cols(df_train, uninteresting)
+    # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
+    # df_test = drop_cols(df_test, uninteresting)
 
     df_train = combine_competitors(df_train)
     df_test = combine_competitors(df_test)
@@ -197,6 +206,24 @@ def prep_data(df_train, df_test):
 
     return df_train, df_test
 
+def count_per_hotel(df):
+    hotel_dict = {}
+    df["hotelcount"] = 0
+    for index, row in df.iterrows():
+        prop_id = row["prop_id"]
+        if prop_id in hotel_dict:
+            hotel_dict[prop_id] +=1
+        else:
+            hotel_dict[prop_id] = 1
+
+    for index, row in df.iterrows():
+        prop_id = row["prop_id"]
+        df.loc[index, "hotelcount"] = hotel_dict[prop_id]
+
+    print(df[["srch_id", "prop_id", "hotelcount"]].to_string())
+
+
+    return df
 
 def combine_competitors(df):
     """
