@@ -77,14 +77,24 @@ def add_category(df):
     df.to_csv("data/train_category.csv", index=False)
 
 def add_searchorder(df):
+    """
+    Adds columns (number of items in search, number of times hotel  is booked,
+                    rank of item in search)
+        Args:
+            df (pandas dataframe)
 
-    df = pd.read_csv("data/test_set_VU_DM.csv")
+        Returns
+            df (pandas dataframe )
+    """
+    # add column n_search n_srchitems
     df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
-    df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
-    df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
-    # print(df[["srch_id", "prop_id", "n_srchitems","n_booked", "srch_rank"]].to_string())
 
-    # df.to_csv("data/1_BIG_test.csv")
+    # add column n_booked
+    df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
+
+    # add collumn srch_rank
+    df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
+
     print(df.shape)
     return df
 
@@ -177,25 +187,6 @@ def prep_data(df_train, df_test):
 
     return df_train, df_test
 
-def count_per_hotel(df):
-    hotel_dict = {}
-    df["hotelcount"] = 0
-    for index, row in df.iterrows():
-        prop_id = row["prop_id"]
-        if prop_id in hotel_dict:
-            hotel_dict[prop_id] +=1
-        else:
-            hotel_dict[prop_id] = 1
-
-    for index, row in df.iterrows():
-        prop_id = row["prop_id"]
-        df.loc[index, "hotelcount"] = hotel_dict[prop_id]
-
-    print(df[["srch_id", "prop_id", "hotelcount"]].to_string())
-
-
-    return df
-
 def combine_competitors(df):
     """
     Set all NULL values to 0
@@ -266,10 +257,15 @@ if __name__ == "__main__":
 
     """ Select train or test """
 
-    clean = "train"
+    clean = "test"
     # clean = "test"
     # df = pd.read_csv("data/fake_data/training_fake.csv")
-    df = pd.read_csv("data/test_set_VU_DM.csv")
+    df = pd.read_csv(f"data/{clean}_set_VU_DM.csv")
+    df = add_searchorder(df)
+
+    # save file
+    df.to_csv(f"data/BIG_{clean}.csv", index=False)
+
     # df = df.sort_values(by="prop_id")
     # df = count_per_hotel(df)
     # add_category(df)
