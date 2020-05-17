@@ -92,6 +92,8 @@ def add_category(df):
         categories.append(category)
     df["category"] = categories
 
+    return df
+
 
 def add_searchorder(df):
 
@@ -267,6 +269,9 @@ def prep_data(df_train, df_test):
     """
 
     data = [df_train, df_test]
+
+    df_train = add_category(df_train)
+    df_train = get_train_data(df_train)
 
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
     df_train = drop_cols(df_train, uninteresting)
