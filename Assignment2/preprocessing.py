@@ -286,8 +286,8 @@ if __name__ == "__main__":
     #     # df = pd.read_csv("data/test_category.csv")
     #     df = pd.read_csv("data/test_short.csv")
 
-    df = add_searchorder(df)
-    df.to_csv("data/test_set_big_searches.csv", index=False)
+    # df = add_searchorder(df)
+
 
 
     """ Combine competitor cols """
@@ -318,4 +318,5 @@ if __name__ == "__main__":
 
 
     """ Save data in a csv file """
+
     # df.to_csv(f"data/preprocessed_{clean}.csv", index=False)
