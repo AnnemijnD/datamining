@@ -25,7 +25,7 @@ def shorten():
     # load data
     df_train = pd.read_csv("data/training_set_VU_DM.csv")
     df_test = pd.read_csv("data/test_set_VU_DM.csv")
-
+    df_test.sort_values("srch_id")
     print(df_train.head(10))
     print(df_test.head(10))
 
@@ -65,14 +65,26 @@ def add_category(df):
             category = 0
         categories.append(category)
     df["category"] = categories
+    # return df
     df.to_csv("data/train_category.csv", index=False)
 
     """
     If test data needs extra row: comment above and uncomment below
     """
     # df["category"] = [0] * len(df)
-    # df.to_csv("data/train_category.csv", index=False)
+    df.to_csv("data/train_category.csv", index=False)
 
+def add_searchorder(df):
+
+    df = pd.read_csv("data/test_set_VU_DM.csv")
+    df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
+    df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
+    df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
+    # print(df[["srch_id", "prop_id", "n_srchitems","n_booked", "srch_rank"]].to_string())
+
+    # df.to_csv("data/1_BIG_test.csv")
+    print(df.shape)
+    return df
 
 def get_train_data(df):
     """
@@ -80,18 +92,20 @@ def get_train_data(df):
     Only need to run this function once!
     """
 
+    srch_order = []
     cat0 = df[df.category == 5].index
     cat1 = df[df.category == 1].index
     cat2 = df[df.category == 0].index
     amount = int(len(df) * .04)
     print("amount of rows selected: ", amount)
+
     cat2_selec = np.random.choice(cat2, amount, replace=False)
 
     cat012 = np.concatenate((cat0, cat1, cat2_selec))
 
     df_selection = df.loc[cat012]
 
-    df_selection.to_csv("data/train_selection.csv", index=False)
+    # df_selection.to_csv("data/train_selection.csv", index=False)
 
 
 def scale(data, vars):
@@ -156,6 +170,24 @@ def prep_data(df_train, df_test):
 
     return df_train, df_test
 
+def count_per_hotel(df):
+    hotel_dict = {}
+    df["hotelcount"] = 0
+    for index, row in df.iterrows():
+        prop_id = row["prop_id"]
+        if prop_id in hotel_dict:
+            hotel_dict[prop_id] +=1
+        else:
+            hotel_dict[prop_id] = 1
+
+    for index, row in df.iterrows():
+        prop_id = row["prop_id"]
+        df.loc[index, "hotelcount"] = hotel_dict[prop_id]
+
+    print(df[["srch_id", "prop_id", "hotelcount"]].to_string())
+
+
+    return df
 
 def combine_competitors(df):
     """
@@ -227,19 +259,33 @@ if __name__ == "__main__":
     """
 
     """ Select train or test """
+
     clean = "train"
     # clean = "test"
+    # df = pd.read_csv("data/fake_data/training_fake.csv")
+    df = pd.read_csv("data/test_set_VU_DM.csv")
+    # df = df.sort_values(by="prop_id")
+    # df = count_per_hotel(df)
+    # add_category(df)
+    # df = get_train_data(df)
+    # exit()
 
-    """ load data you want to preprocess """
-    if clean == "train":
-        # df = pd.read_csv("data/train_selection.csv")
-        df = pd.read_csv("data/training_short.csv")
-    else:
-        # df = pd.read_csv("data/test_category.csv")
-        df = pd.read_csv("data/test_short.csv")
+    # """ load data you want to preprocess """
+    # if clean == "train":
+    #     # df = pd.read_csv("data/train_selection.csv")
+    #     df = pd.read_csv("data/training_short.csv")
+    #     df = df.sort_values(by="srch_id")
+    #
+    # else:
+    #     # df = pd.read_csv("data/test_category.csv")
+    #     df = pd.read_csv("data/test_short.csv")
+
+    df = add_searchorder(df)
+    df.to_csv("data/test_set_big_searches.csv", index=False)
+
 
     """ Combine competitor cols """
-    df = combine_competitors(df)
+    # df = combine_competitors(df)
 
 
     """ drop cols TODO: CHECK OF DIT ZO IS VOOR TRAIN EN TEST"""
@@ -276,4 +322,4 @@ if __name__ == "__main__":
 
 
     """ Save data in a csv file """
-    df.to_csv(f"data/preprocessed_{clean}.csv", index=False)
+    # df.to_csv(f"data/preprocessed_{clean}.csv", index=False)
