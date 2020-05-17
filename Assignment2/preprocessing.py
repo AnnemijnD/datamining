@@ -278,9 +278,42 @@ def combine_competitors(df):
     return df
 
 
+def prep_data(df_train, df_test):
+    """
+    Call all preprocessing functions for training and test set.
+    """
+    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    df_train = drop_cols(df_train, uninteresting)
+    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
+    df_test = drop_cols(df_test, uninteresting)
+
+    df_train = add_searchorder(df_train)
+    df_test = add_searchorder(df_test)
+
+    df_train = combine_competitors(df_train)
+    df_test = combine_competitors(df_test)
+
+    numeric_train, categorical_train = overview(df_train)
+    print(numeric_train)
+    numeric_test, categorical_test = overview(df_test)
+    print(numeric_test)
+
+    # avoid scaling of boolean variables and important id's
+    for boolean in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
+        numeric_train.remove(boolean)
+        numeric_test.remove(boolean)
+
+    df_train = missing_values(df_train)
+    df_test = missing_values(df_test)
+
+    df_train = scale(df_train, numeric_train)
+    df_test = scale(df_test, numeric_test)
+
+
+    return df_train, df_test
+
+
 if __name__ == "__main__":
-    # shorten()
-    # quit()
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!

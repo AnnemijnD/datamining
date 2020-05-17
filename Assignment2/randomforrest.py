@@ -20,7 +20,7 @@ def prediction(df_test, X_train, y_train, X_test):
     print("Random forest score: ", score)
 
     # df_test['category'] = model.predict(X_test)
-    # solution = df_test[['prop_id', 'srch_id', 'category']]
+    # solution = df_test[['srch_id', 'prop_id', 'category']]
     # predictions.to_csv('solutions/prediction_random_forrest_prep_min.csv', index=False)
 
     return score
