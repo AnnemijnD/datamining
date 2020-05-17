@@ -16,14 +16,14 @@ sns.set()
 sns.set_color_codes("pastel")
 
 
-def create_model(X_train, lyrs=[16], act="relu", opt='Adam', dr=0.2):
+def create_model(lyrs=[16], act="relu", opt='Adam', dr=0.2):
     """
     Creates neural network model with specified amount of layers and activation types.
     """
 
     # set random seed for reproducibility
-    # seed(42)
-    # tf.random.set_seed(42)
+    seed(42)
+    tf.random.set_seed(42)
 
     model = Sequential()
 
@@ -62,7 +62,7 @@ def create_prediction(df_test, X_train, y_train, X_test):
 
     # calculate predictions for test dataset
     df_test['category'] = model.predict(X_test)
-    print(df_test)
+    print(df_test.head())
     solution = df_test[['prop_id', 'srch_id', 'category']]
 
     date_time = time.strftime("%Y-%m-%d-%H-%M")
@@ -152,7 +152,7 @@ def model_testing(X_train,y_train):
     plt.ylabel("Accuracy (%)", fontsize=20)
     plt.legend()
     plt.subplots_adjust(bottom=.15, left=.15)
-    plt.savefig("results/32-linear-relu-" + str(runs) + "runs.png")
+    plt.savefig("results/linear-relu-" + str(runs) + "runs.png")
     plt.show()
 
 
@@ -189,30 +189,33 @@ def param_testing(X_train, y_train):
     print(f'Accuracy: {round(grid.best_score_*100, 2)}%')
 
 
-# df_train = pd.read_csv("data/train_selection.csv")
-# df_train = pd.read_csv("data/training_set_VU_DM.csv")
-df_test = pd.read_csv("data/test_short.csv")
-df_train = pd.read_csv("data/training_short.csv")
-# df_test = pd.read_csv("data/test_set_VU_DM.csv")
+if __name__ == "__main__":
+    # df_train = pd.read_csv("data/train_selection.csv")
+    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    df_test = pd.read_csv("data/test_prep_long.csv")
+    df_train = pd.read_csv("data/train_prep_long.csv")
+    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
-# preprocess data
-data, df_test = prep_data(df_train, df_test)
+    # preprocess data
+    # data, df_test = prep_data(df_train, df_test)
 
-# predicting columns of training set
-predictors = [c for c in data.columns if c not in ["prop_id","srch_id","booking_bool",\
-                            "click_bool","gross_bookings_usd","position", "category"]]
-X_train = data[predictors]
+    # predicting columns of training set
+    predictors = [c for c in df_train.columns if c not in ["prop_id","srch_id","booking_bool",\
+                                "click_bool","gross_bookings_usd","position", "category"]]
+    X_train = df_train[predictors]
+    # X_train.drop(["srch_id", "prop_id"], axis=1, inplace=True)
 
-# predicting columns of test set
-cols = [col for col in df_test.columns if col not in ['prop_id', 'srch_id']]
-X_test = df_test[cols]
+    # predicting columns of test set
+    cols = [col for col in df_test.columns if col not in ['prop_id', 'srch_id']]
+    X_test = df_test[cols]
+    # X_test.drop(["srch_id", "prop_id"], axis=1, inplace=True)
 
-# prediction (outcome) variable
-y_train = data.category.astype(int)
+    # prediction (outcome) variable
+    y_train = df_train.category.astype(int)
 
 
-""" functions """
-# create_model()
-# param_testing(X_train, y_train)
-# model_testing(X_train, y_train)
-create_prediction(df_test, X_train, y_train, X_test)
+    """ functions """
+    # create_model()
+    # param_testing(X_train, y_train)
+    model_testing(X_train, y_train)
+    # create_prediction(df_test, X_train, y_train, X_test)

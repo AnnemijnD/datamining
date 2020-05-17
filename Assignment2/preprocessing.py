@@ -9,6 +9,7 @@ import time
 from tqdm import tqdm
 import random
 import math
+from numba import jit # does not work with pandas
 
 
 def display_df(df):
@@ -19,6 +20,26 @@ def display_df(df):
         display(df)
 
 
+def importance():
+    """
+    Optional: importance estimation.
+    """
+    # memoryerror for large dataset
+    target = data['booking_bool'].values
+    select_features = data.columns.values
+
+    selector = SelectKBest(f_classif, len(select_features))
+    selector.fit(data, target)
+    scores = -np.log10(selector.pvalues_)
+    indices = np.argsort(scores)[::-1]
+
+    print('Features importance:')
+    for i in range(len(scores)):
+        print('%.2f %s' % (scores[indices[i]], select_features[indices[i]]))
+
+    # most important: click_bool > position > random_bool > prop_location_score2
+
+
 def shorten():
     """
     Shorten large dataset to only 1000 rows for facilitating inspection of data.
@@ -26,14 +47,15 @@ def shorten():
 
     # load data
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_train = pd.read_csv("data/train_selection.csv")
+    # df_train = pd.read_csv("data/train_selection.csv")
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
-
+    df_train = pd.read_csv("data/train_prep_long.csv")
+    df_test = pd.read_csv("data/test_prep_long.csv")
     print(df_train.head(10))
     # print(df_test.head(10))
 
     df_train.sample(n=1000).to_csv("data/train_selection_short.csv", index=False)
-    # df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
+    df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
 
 
 def overview(data):
@@ -43,9 +65,9 @@ def overview(data):
     # summaries of categorical and numerical data
     numeric_columns = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
     categorical_columns = data.select_dtypes(include=["object", "category"]).columns.tolist()
-    print('numeric columns: ' + str(numeric_columns))
-    display_df(round(data[numeric_columns].describe(),2)) # MEMORYERROR
-    print('categorical columns: ' + str(categorical_columns))
+    # print('numeric columns: ' + str(numeric_columns))
+    # display_df(round(data[numeric_columns].describe(),2)) # MEMORYERROR
+    # print('categorical columns: ' + str(categorical_columns))
     # print(data[categorical_columns].describe())
 
     return numeric_columns, categorical_columns
@@ -68,14 +90,9 @@ def add_category(df):
             category = 0
         categories.append(category)
     df["category"] = categories
-    # df.to_csv("data/train_category.csv", index=False)
 
-    """
-    If test data needs extra row: comment above and uncomment below
-    """
-    # df["category"] = [0] * len(df)
-    # df.to_csv("data/train_category.csv", index=False)
     return df
+
 
 def get_train_data(df):
     """
@@ -94,8 +111,8 @@ def get_train_data(df):
 
     df_selection = df.loc[cat012]
 
-    # df_selection.to_csv("data/train_selection.csv", index=False)
     return df_selection
+
 
 def scale(data, vars):
     """
@@ -111,15 +128,20 @@ def scale(data, vars):
     return data
 
 
+def transform(data, vars):
+    """
+    TODO: transform categorical cols.
+    """
+    # data["Pclass"] = pd.Categorical(data.Pclass)
+
+
 def missing_values(data):
     """
     Replace missing values by a sensible value, i.e. the mean value of individuals in the same group.
     """
-    print("MISSING VALS BEFORE")
-    # for col in data.columns.values:
-    #     if data[col].isnull().any():
-    #         print(f"Missing values in {col}")
-    print(data.isnull().sum())
+    # print("MISSING VALS BEFORE")
+    # print(data.isnull().sum())
+
     # TODO: fillnas with e.g. mean value of comparable data group
     # for var in numeric_columns:
     #     data[var].fillna(data.groupby("booking_bool")[var].transform("mean"), inplace=True)
@@ -127,11 +149,9 @@ def missing_values(data):
     # now data is filled with the mean of the col
     data = data.fillna(data.mean())
 
-    print("MISSING VALS AFTER")
-    print(data.isnull().sum())
-    # for col in data.columns.values:
-    #     if data[col].isnull().any():
-    #         print(f"Missing values in {col}")
+    # print("MISSING VALS AFTER")
+    # print(data.isnull().sum())
+
 
     return data
 
@@ -155,8 +175,18 @@ def prep_data(df_train, df_test):
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
     df_test = drop_cols(df_test, uninteresting)
 
+    df_train = combine_competitors(df_train)
+    df_test = combine_competitors(df_test)
+
     numeric_train, categorical_train = overview(df_train)
+    print(numeric_train)
     numeric_test, categorical_test = overview(df_test)
+    print(numeric_test)
+
+    # avoid scaling of boolean variables and important id's
+    for boolean in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
+        numeric_train.remove(boolean)
+        numeric_test.remove(boolean)
 
     df_train = missing_values(df_train)
     df_test = missing_values(df_test)
@@ -164,8 +194,6 @@ def prep_data(df_train, df_test):
     df_train = scale(df_train, numeric_train)
     df_test = scale(df_test, numeric_test)
 
-    df_train = combine_competitors(df_train)
-    df_test = combine_competitors(df_test)
 
     return df_train, df_test
 
@@ -186,6 +214,7 @@ def combine_competitors(df):
         for i in range(COMP):
             rate = row[f"comp{i + 1}_rate"]
             inv = row[f"comp{i + 1}_inv"]
+
             percentage = row[f"comp{i + 1}_rate_percent_diff"]
             if math.isnan(rate):
                 rate = 0
@@ -230,7 +259,10 @@ def combine_competitors(df):
 
     return df
 
+
 if __name__ == "__main__":
+    shorten()
+    quit()
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
@@ -238,44 +270,15 @@ if __name__ == "__main__":
     Make sure to delete the previous preprocessed file
     """
 
-    """ Select train or test """
-    clean = "train"
-    # clean = "test"
+    # load data to preprocess
+    df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    # df_test = pd.read_csv("data/test_short.csv")
+    # df_train = pd.read_csv("data/training_short.csv")
 
-    """ load data you want to preprocess """
-    if clean == "train":
-        # df = pd.read_csv("data/train_selection.csv")
-        df = pd.read_csv("data/training_short.csv")
-    else:
-        # df = pd.read_csv("data/test_category.csv")
-        df = pd.read_csv("data/test_short.csv")
-
-    """ Combine competitor cols """
-    df = combine_competitors(df)
-
-
-
-
-    """ TODO: make cols categorical """
-    # data["Pclass"] = pd.Categorical(data.Pclass)
-
-
-    """ optional: importance estimation """
-    # memoryerror for large dataset
-    # target = data['booking_bool'].values
-    # select_features = data.columns.values
-    #
-    # selector = SelectKBest(f_classif, len(select_features))
-    # selector.fit(data, target)
-    # scores = -np.log10(selector.pvalues_)
-    # indices = np.argsort(scores)[::-1]
-    #
-    # print('Features importance:')
-    # for i in range(len(scores)):
-    #     print('%.2f %s' % (scores[indices[i]], select_features[indices[i]]))
-
-    # most important: click_bool > position > random_bool > prop_location_score2
-
+    df_train, df_test = prep_data(df_train, df_test)
 
     """ Save data in a csv file """
-    df.to_csv("data/preprocessed_" + clean + ".csv", index=False)
+    # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
+    df_test.to_csv("data/test_prep_long.csv", index=False)
+    df_train.to_csv("data/train_prep_long.csv", index=False)
