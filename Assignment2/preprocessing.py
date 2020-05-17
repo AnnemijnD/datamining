@@ -279,8 +279,8 @@ def combine_competitors(df):
 
 
 if __name__ == "__main__":
-    shorten()
-    quit()
+    # shorten()
+    # quit()
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
@@ -344,10 +344,10 @@ if __name__ == "__main__":
     #     print('%.2f %s' % (scores[indices[i]], select_features[indices[i]]))
 
     # most important: click_bool > position > random_bool > prop_location_score2
-
-    df_train, df_test = prep_data(df_train, df_test)
-
-    """ Save data in a csv file """
-    # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
-    df_test.to_csv("data/test_prep_long.csv", index=False)
-    df_train.to_csv("data/train_prep_long.csv", index=False)
+    #
+    # df_train, df_test = prep_data(df_train, df_test)
+    #
+    # """ Save data in a csv file """
+    # # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
+    # df_test.to_csv("data/test_prep_long.csv", index=False)
+    # df_train.to_csv("data/train_prep_long.csv", index=False)
