@@ -25,14 +25,15 @@ def shorten():
     """
 
     # load data
-    df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    df_train = pd.read_csv("data/train_selection.csv")
+    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
     print(df_train.head(10))
-    print(df_test.head(10))
+    # print(df_test.head(10))
 
-    df_train.sample(n=1000).to_csv("data/training_short.csv", index=False)
-    df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
+    df_train.sample(n=1000).to_csv("data/train_selection_short.csv", index=False)
+    # df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
 
 
 def overview(data):
@@ -147,16 +148,19 @@ def drop_cols(df, uninteresting):
 def prep_data(df_train, df_test):
     df_train = add_category(df_train)
     df_train = get_train_data(df_train)
-    
+
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "click_bool", "booking_bool", "gross_bookings_usd"]
     df_train = drop_cols(df_train, uninteresting)
 
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
     df_test = drop_cols(df_test, uninteresting)
+
     numeric_train, categorical_train = overview(df_train)
     numeric_test, categorical_test = overview(df_test)
+
     df_train = missing_values(df_train)
     df_test = missing_values(df_test)
+
     df_train = scale(df_train, numeric_train)
     df_test = scale(df_test, numeric_test)
 
@@ -248,23 +252,10 @@ if __name__ == "__main__":
     df = combine_competitors(df)
 
 
-    """ drop cols TODO: CHECK OF DIT ZO IS VOOR TRAIN EN TEST"""
-    if clean == "train":
-        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
-    else:
-        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
-    data = drop_cols(df, uninteresting)
 
 
     """ TODO: make cols categorical """
     # data["Pclass"] = pd.Categorical(data.Pclass)
-
-
-    """ overview of numerical and categorical data """
-    # numeric, categorical = overview(data)
-
-    """ TODO: transform categorical variables """
-    # nvt als er geen categorische variabelen zijn
 
 
     """ optional: importance estimation """
@@ -285,4 +276,4 @@ if __name__ == "__main__":
 
 
     """ Save data in a csv file """
-    df.to_csv(f"data/preprocessed_{clean}.csv", index=False)
+    df.to_csv("data/preprocessed_" + clean + ".csv", index=False)
