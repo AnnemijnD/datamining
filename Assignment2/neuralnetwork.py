@@ -68,7 +68,9 @@ def create_prediction(df_test, X_train, y_train, X_test):
     date_time = time.strftime("%Y-%m-%d-%H-%M")
     solution.to_csv("results/unsorted" + str(date_time) + ".csv", index=False)
     # save prediction in output file
-    solution.sort_values(by='category', ascending=False).to_csv("results/sorted" + str(date_time) + ".csv", index=False)
+    solution = solution.sort_values(by='category', ascending=False)
+    solution = solution.drop("category", axis=1)
+    solution.to_csv("results/sorted" + str(date_time) + ".csv", index=False)
 
     # TODO: laatste kolom category eraf halen, dit werkt niet
     # sorted_sol = solution.sort_values(by='category', ascending=False)
@@ -188,17 +190,17 @@ def param_testing(X_train, y_train):
 
 
 # df_train = pd.read_csv("data/train_selection.csv")
-df_train = pd.read_csv("data/training_set_VU_DM.csv")
-# df_test = pd.read_csv("data/test_short.csv")
-# df_train = pd.read_csv("data/training_short.csv")
-df_test = pd.read_csv("data/test_set_VU_DM.csv")
+# df_train = pd.read_csv("data/training_set_VU_DM.csv")
+df_test = pd.read_csv("data/test_short.csv")
+df_train = pd.read_csv("data/training_short.csv")
+# df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
 # preprocess data
 data, df_test = prep_data(df_train, df_test)
 
 # predicting columns of training set
 predictors = [c for c in data.columns if c not in ["prop_id","srch_id","booking_bool",\
-                            "click_bool","gross_bookings_usd","position","category"]]
+                            "click_bool","gross_bookings_usd","position", "category"]]
 X_train = data[predictors]
 
 # predicting columns of test set

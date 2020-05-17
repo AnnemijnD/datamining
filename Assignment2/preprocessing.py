@@ -164,13 +164,15 @@ def prep_data(df_train, df_test):
     df_train = scale(df_train, numeric_train)
     df_test = scale(df_test, numeric_test)
 
+    df_train = combine_competitors(df_train)
+    df_test = combine_competitors(df_test)
+
     return df_train, df_test
 
 
 def combine_competitors(df):
     """
     Set all NULL values to 0
-
     Combine
     For rate: sum the rate of the competitors
     For inv: set 0 if at least one of them is zero
