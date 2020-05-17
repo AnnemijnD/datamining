@@ -190,9 +190,9 @@ def param_testing(X_train, y_train):
 
 
 # df_train = pd.read_csv("data/train_selection.csv")
-df_train = pd.read_csv("data/training_short.csv")
+# df_train = pd.read_csv("data/training_set_VU_DM.csv")
 df_test = pd.read_csv("data/test_short.csv")
-# df_train = pd.read_csv("data/training_short.csv")
+df_train = pd.read_csv("data/training_short.csv")
 # df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
 # preprocess data
