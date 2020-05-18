@@ -96,6 +96,25 @@ def add_category(df):
     return df
 
 
+def add_category2(df):
+    booked = df[df.booking_bool == 1].index
+    clicked = df[df.click_bool == 1].index
+
+    nr_rows = len(df)
+    categories = []
+    for row in range(nr_rows):
+        if row in booked:
+            categories.append(5)
+        elif row in clicked:
+            categories.append(1)
+        else:
+            categories.append(0)
+
+    df["category"] = categories
+
+    return df
+
+
 def add_searchorder(df):
 
     # df = pd.read_csv("data/test_set_VU_DM.csv")
@@ -182,17 +201,13 @@ def fill_missing_val(df):
     prop_review_score
     change nan to -1
     """
-    nan_rows = df[df.prop_review_score.isnull()].index
-    for i in nan_rows:
-        df.at[i, "prop_review_score"] = -1
+    df["prop_review_score"].fillna(-1, inplace=True)
 
     """
     prop_location_score2
     change nan to -1
     """
-    nan_rows = df[df.prop_location_score2.isnull()].index
-    for i in nan_rows:
-        df.at[i, "prop_location_score2"] = -1
+    df["prop_location_score2"].fillna(-1, inplace=True)
 
     """
     srch_query_affinity_score
@@ -202,27 +217,42 @@ def fill_missing_val(df):
     je mega kleine waarden krijgt.... Weet niet hoe kut dat is?
     Iig ook de null waarden naar -1 gezet nu.
     """
-    nan_rows = df[df.srch_query_affinity_score.isnull()].index
+    # nan_rows = df[df.srch_query_affinity_score.isnull()].index
+    #
+    # rows = range(len(df))
+    # float_rows = sorted(list(set(rows) - set(nan_rows)))
+    # for i in float_rows:
+    #     df.at[i, "srch_query_affinity_score"] = math.exp(df["srch_query_affinity_score"].iloc[i])
+    #
+    #     # als met exp niet werkt is dit een andere optie
+    #     # df.at[i, "srch_query_affinity_score"] = -1 / df["srch_query_affinity_score"].iloc[i]
+    #
+    #     # als dat ook niet werkt zouden we als laatste optie alle nan waarden de
+    #     # minimum waarde van de kolom kunnen geven
+    #
+    # for i in nan_rows:
+    #     df.at[i, "srch_query_affinity_score"] = -1
 
-    rows = range(len(df))
-    float_rows = sorted(list(set(rows) - set(nan_rows)))
-    for i in float_rows:
-        df.at[i, "srch_query_affinity_score"] = math.exp(df["srch_query_affinity_score"].iloc[i])
+    # ============== above is the 'original'
+    # BOVENSTAANDE NIET VERWIJDEREN NOG. NU SOWIESO IETS WAT NIET ERRORT/ LANG DUURT
+    # MAAR BOVENSTAANDE IDEE IS MISS SLIMMER.
 
-        # als met exp niet werkt is dit een andere optie
-        # df.at[i, "srch_query_affinity_score"] = -1 / df["srch_query_affinity_score"].iloc[i]
 
-    for i in nan_rows:
-        df.at[i, "srch_query_affinity_score"] = -1
+
+    df["srch_query_affinity_score"].fillna(1, inplace=True)
+    min_val = min(df["srch_query_affinity_score"])
+
+    df.loc[df["srch_query_affinity_score"] == 1, ["srch_query_affinity_score"]] = min_val
+
+
+    print(df["srch_query_affinity_score"])
+
 
     """
     orig_destination_distance
     change nan to -1
     """
-    nan_rows = df[df.orig_destination_distance.isnull()].index
-    for i in nan_rows:
-        df.at[i, "orig_destination_distance"] = -1
-
+    df["orig_destination_distance"].fillna(-1, inplace=True)
 
     return df
 
@@ -272,7 +302,6 @@ def combine_competitors(df):
         for i in range(COMP):
             rate = row[f"comp{i + 1}_rate"]
             inv = row[f"comp{i + 1}_inv"]
-
             percentage = row[f"comp{i + 1}_rate_percent_diff"]
             if math.isnan(rate):
                 rate = 0
@@ -318,28 +347,80 @@ def combine_competitors(df):
     return df
 
 
+def combine_competitors2(df):
+
+    # get all competitor column names
+    COMP = 8
+    comp_cols = []
+    for i in range(COMP):
+        comp_cols.append(f"comp{i + 1}_rate")
+        comp_cols.append(f"comp{i + 1}_inv")
+        comp_cols.append(f"comp{i + 1}_rate_percent_diff")
+
+    # fill NULL values with zero
+    for column in comp_cols:
+        df[column].fillna(0, inplace=True)
+
+    rates_col, invs_col, perc_col = [], [], []
+    for index, row in df.iterrows():
+        rates, invs, percentages = [], [], []
+        for i in range(COMP):
+            rate = row[f"comp{i + 1}_rate"]
+            inv = row[f"comp{i + 1}_inv"]
+            percentage = row[f"comp{i + 1}_rate_percent_diff"]
+            percentage = rate * percentage
+            rates.append(rate)
+            invs.append(inv)
+            percentages.append(percentage)
+
+        percentage = sum(percentages)
+        rate = sum(rates)
+
+        # determine percentage based on rate
+        if rate < 0:
+            percentage /= - rate
+        elif rate > 0:
+            percentage /= rate
+
+        if 0 in invs:
+            inv = 0
+        else:
+            inv = 1
+
+        rates_col.append(rate)
+        invs_col.append(inv)
+        perc_col.append(percentage)
+
+    df = df.drop(comp_cols, axis=1)
+    df["comp_rate"] = rates_col
+    df["comp_inv"] = invs_col
+    df["comp_perc"] = perc_col
+
+    return df
+
+
+
 def prep_data(df_train, df_test):
     # shorten()
     # quit()
     """
     Call all preprocessing functions for training and test set.
     """
-    print("checken of mn python normaal werkt hihaho")
-
     start = time.time()
 
     data = [df_train, df_test]
 
-    df_train = add_category(df_train)
+    df_train = add_category2(df_train)
     df_train = get_train_data(df_train)
     print("door de add_category en train data")
     print(time.time() - start)
 
-    # df_train = combine_competitors(df_train)
-    # print("door de eerste combine_competitors")
-    # df_test = combine_competitors(df_test)
-    # print("door de tweede combine_competitors")
-    # print(time.time() - start)
+
+    df_train = combine_competitors2(df_train)
+    print("door de eerste combine_competitors")
+    df_test = combine_competitors2(df_test)
+    print("door de tweede combine_competitors")
+    print(time.time() - start)
 
 
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
@@ -394,6 +475,7 @@ def prep_data(df_train, df_test):
 
 
 if __name__ == "__main__":
+
     # shorten()
     # quit()
     """
@@ -407,15 +489,16 @@ if __name__ == "__main__":
     """
 
     # load data to preprocess
-    df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_short.csv")
-    # df_train = pd.read_csv("data/training_short.csv")
+    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    # df_test = pd.read_csv("data/test_short.csv")
+    df_train = pd.read_csv("data/training_short.csv")
 
     df_train, df_test = prep_data(df_train, df_test)
 
     """ Save data in a csv file """
     # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
     # OR RENAME THE ONES BELOW
-    # df_test.to_csv("data/test_prep_long_fmv_so.csv", index=False)
-    df_train.to_csv("data/train_prep_long_fmv_so.csv", index=False)
+    # df_train.to_csv("data/TESTTEST.csv")
+    df_test.to_csv("data/test_prep_NIEUW.csv", index=False)
+    # df_train.to_csv("data/train_prep_NIEUW.csv", index=False)
