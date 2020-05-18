@@ -67,8 +67,26 @@ def XGBoost(Xtrain, Ytrain, df_test, Xtest):
     X_train, X_test, y_train, y_test = train_test_split(Xtrain, Ytrain, test_size=0.33, random_state=7)
     # gbm = xgb.XGBClassifier(max_depth=3, n_estimators=300, learning_rate=0.05).fit(X_train, y_train)
 
-    """ training """
-    model = xgb.XGBClassifier()
+    # """ training """
+    # # set xgboost params
+    # param = {
+    #     'max_depth': 3,  # the maximum depth of each tree
+    #     'eta': 0.3,  # the training step for each iteration
+    #     'objective': 'rank:ndcg',
+    #     'num_class': 3}  # the number of classes that exist in this datset
+    # num_round = 20  # the number of training iterations
+    # dtrain = X_train
+    # dtest = X_test
+    # #------------- numpy array ------------------
+    # # training and testing - numpy matrices
+    # bst = xgb.train(param, dtrain, num_round)
+    # preds = bst.predict(dtest)
+    #
+    # # extracting most confident predictions
+    # best_preds = np.asarray([np.argmax(line) for line in preds])
+    # print("Numpy array precision:", precision_score(y_train, best_preds, average='macro'))
+    #
+    model = xgb.XGBClassifier(objective='rank:ndcg', num_class=3, seed=7)
     model.fit(X_train, y_train)
     # make predictions for test data
     y_pred = model.predict(X_test)
@@ -78,15 +96,15 @@ def XGBoost(Xtrain, Ytrain, df_test, Xtest):
     print("Accuracy: %.2f%%" % (accuracy * 100.0))
 
     """ prediction """
-    df_test['category'] = model.predict(Xtest)
-
-    solution = df_test[['srch_id', 'prop_id', 'category']]
-
-    date_time = time.strftime("%Y-%m-%d-%H-%M")
-    solution = solution.sort_values(by='category', ascending=False)
-    solution = solution.drop("category", axis=1)
-    print(solution.head())
-    solution.to_csv('results/solutions/xgboost_' + str(date_time) + ".csv", index=False)
+    # df_test['category'] = model.predict(Xtest)
+    #
+    # solution = df_test[['srch_id', 'prop_id', 'category']]
+    #
+    # date_time = time.strftime("%Y-%m-%d-%H-%M")
+    # solution = solution.sort_values(by='category', ascending=False)
+    # solution = solution.drop("category", axis=1)
+    # print(solution.head())
+    # solution.to_csv('results/solutions/xgboost_' + str(date_time) + ".csv", index=False)
 
 
 
@@ -107,6 +125,6 @@ if __name__ == "__main__":
     y_train = df_train.category.astype(int)
 
     """ functions """
-    prediction(df_test, X_train, y_train, X_test)
+    # prediction(df_test, X_train, y_train, X_test)
     # param_tuning(X_train, y_train)
-    # XGBoost(X_train, y_train, df_test, X_test)
+    XGBoost(X_train, y_train, df_test, X_test)

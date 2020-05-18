@@ -11,6 +11,7 @@ import random
 import math
 import timeit
 from numba import jit # does not work with pandas
+import time
 
 
 def display_df(df):
@@ -49,7 +50,7 @@ def shorten():
     # load data
     df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_selection.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_prep_long.csv")
     # df_test = pd.read_csv("data/test_prep_long.csv")
     # df = pd.read_csv("results/solutions/xgboost_2020-05-17-21-02.csv")
@@ -98,6 +99,7 @@ def add_category(df):
 
 def add_searchorder(df):
 
+    # df = pd.read_csv("data/test_set_VU_DM.csv")
     df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
     df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
     df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
@@ -170,6 +172,60 @@ def missing_values(data):
 
 
     return data
+
+
+def fill_missing_val(df):
+    """
+    Fill the missing values per column
+    """
+
+    """
+    prop_review_score
+    change nan to -1
+    """
+    nan_rows = df[df.prop_review_score.isnull()].index
+    for i in nan_rows:
+        df.at[i, "prop_review_score"] = -1
+
+    """
+    prop_location_score2
+    change nan to -1
+    """
+    nan_rows = df[df.prop_location_score2.isnull()].index
+    for i in nan_rows:
+        df.at[i, "prop_location_score2"] = -1
+
+    """
+    srch_query_affinity_score
+
+    GEEN IDEE NOG OF DIT HANDIG IS..... ZE HEBBEN VAST MET EEN REDEN DE LOG GENOMEN?
+    Zet ze nu weer om naar probabilities tussen 0 en 1, maar denk dat zij het hadden omgezet omdat
+    je mega kleine waarden krijgt.... Weet niet hoe kut dat is?
+    Iig ook de null waarden naar -1 gezet nu.
+    """
+    nan_rows = df[df.srch_query_affinity_score.isnull()].index
+
+    rows = range(len(df))
+    float_rows = sorted(list(set(rows) - set(nan_rows)))
+    for i in float_rows:
+        df.at[i, "srch_query_affinity_score"] = math.exp(df["srch_query_affinity_score"].iloc[i])
+
+        # als met exp niet werkt is dit een andere optie
+        # df.at[i, "srch_query_affinity_score"] = -1 / df["srch_query_affinity_score"].iloc[i]
+
+    for i in nan_rows:
+        df.at[i, "srch_query_affinity_score"] = -1
+
+    """
+    orig_destination_distance
+    change nan to -1
+    """
+    nan_rows = df[df.orig_destination_distance.isnull()].index
+    for i in nan_rows:
+        df.at[i, "orig_destination_distance"] = -1
+
+
+    return df
 
 
 def drop_cols(df, uninteresting):
@@ -269,14 +325,13 @@ def prep_data(df_train, df_test):
     """
     Call all preprocessing functions for training and test set.
     """
-
     data = [df_train, df_test]
     time1 = time.time()
     df_train = add_category(df_train)
     df_train = get_train_data(df_train)
     time2 = time.time()
     print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(1/6) category added")
+    print("(1/6) category added\n")
 
     time1 = time.time()
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
@@ -285,14 +340,14 @@ def prep_data(df_train, df_test):
     df_test = drop_cols(df_test, uninteresting)
     time2 = time.time()
     print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(2/6) columns dropped")
+    print("(2/6) columns dropped\n")
 
     time1 = time.time()
     df_train = add_searchorder(df_train)
     df_test = add_searchorder(df_test)
     time2 = time.time()
     print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(3/6) search order added")
+    print("(3/6) search order added\n")
 
     time1 = time.time()
     df_train = combine_competitors(df_train)
@@ -300,31 +355,36 @@ def prep_data(df_train, df_test):
     # print("skip competitors")
     time2 = time.time()
     print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(4/6) competitors combined")
+    print("(4/6) competitors combined\n")
 
     numeric_train, categorical_train = overview(df_train)
-    print(numeric_train)
+    # print(numeric_train)
     numeric_test, categorical_test = overview(df_test)
-    print(numeric_test)
+    # print(numeric_test)
 
     # avoid scaling of boolean variables and important id's
-    for boolean in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
-        numeric_train.remove(boolean)
-        numeric_test.remove(boolean)
+    for var in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
+        numeric_train.remove(var)
+        numeric_test.remove(var)
+
+    # do not scale category for NDCG function!
+    numeric_train.remove("category")
 
     time1 = time.time()
-    df_train = missing_values(df_train)
-    df_test = missing_values(df_test)
+    # df_train = missing_values(df_train)
+    # df_test = missing_values(df_test)
+    df_train = fill_missing_val(df_train)
+    df_test = fill_missing_val(df_test)
     time2 = time.time()
     print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(5/6) missing values imputed")
+    print("(5/6) missing values imputed\n")
 
     time1 = time.time()
     df_train = scale(df_train, numeric_train)
     df_test = scale(df_test, numeric_test)
     time2 = time.time()
     print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(6/6) numerical variables scaled")
+    print("(6/6) numerical variables scaled\n")
 
 
     return df_train, df_test
@@ -342,25 +402,26 @@ if __name__ == "__main__":
     # TO AVOID MEMORY ERROR: run first 1 large and one small file, save the output
     of the large file, then switch and run again
     """
-    print("START PREPROCESSING DATA\n")
+    print("\nSTART PREPROCESSING DATA\n")
 
     # load data to preprocess
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_short.csv")
-    df_train = pd.read_csv("data/training_short.csv")
+    df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    df_test = pd.read_csv("data/test_short.csv")
+    # df_train = pd.read_csv("data/training_short.csv")
     # test_test = pd.read_csv("data/test_prep_long2-nocomp-rank.csv")
     # test_traint = pd.read_csv("data/train_prep_long2-nocomp-rank.csv")
     # print(test_test.shape)
     # print(test_train.shape)
     # quit()
-    print("data loaded successfully")
+    print("data loaded successfully\n")
     # print(df_train.head())
     # print(df_train.shape)
+
     time1 = time.time()
     print("preprocessing data")
     df_train, df_test = prep_data(df_train, df_test)
-    print("preprocessing successful")
+    print("preprocessing successful\n")
     time2 = time.time()
     print("preprocessing took ", (time2-time1)*1000.0, " ms")
     # print(df_train.head())
@@ -369,6 +430,6 @@ if __name__ == "__main__":
     """ Save data in a csv file """
     # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
     # OR RENAME THE ONES BELOW
-    print("saving data")
-    df_test.to_csv("data/test_prep_long2-comp-rank.csv", index=False)
-    # df_train.to_csv("data/train_prep_long2-comp-rank.csv", index=False)
+    print("saving data\n")
+    # df_test.to_csv("data/test_prep_long3-all.csv", index=False)
+    df_train.to_csv("data/train_prep_long3-all.csv", index=False)
