@@ -10,6 +10,7 @@ from tqdm import tqdm
 import random
 import math
 from numba import jit # does not work with pandas
+import time
 
 
 def display_df(df):
@@ -46,17 +47,17 @@ def shorten():
     """
 
     # load data
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_selection.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_prep_long.csv")
     # df_test = pd.read_csv("data/test_prep_long.csv")
     # df = pd.read_csv("results/solutions/xgboost_2020-05-17-21-02.csv")
     # print(df_train.head(10))
     # print(df_test.head(10))
 
-    # df_train.sample(n=1000).to_csv("data/train_selection_short.csv", index=False)
-    df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
+    df_train.sample(n=1000).to_csv("data/training_short.csv", index=False)
+    # df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
     # df.sample(n=1000).to_csv("data/xg_short.csv", index=False)
 
 def overview(data):
@@ -97,7 +98,7 @@ def add_category(df):
 
 def add_searchorder(df):
 
-    df = pd.read_csv("data/test_set_VU_DM.csv")
+    # df = pd.read_csv("data/test_set_VU_DM.csv")
     df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
     df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
     df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
@@ -170,6 +171,60 @@ def missing_values(data):
 
 
     return data
+
+
+def fill_missing_val(df):
+    """
+    Fill the missing values per column
+    """
+
+    """
+    prop_review_score
+    change nan to -1
+    """
+    nan_rows = df[df.prop_review_score.isnull()].index
+    for i in nan_rows:
+        df.at[i, "prop_review_score"] = -1
+
+    """
+    prop_location_score2
+    change nan to -1
+    """
+    nan_rows = df[df.prop_location_score2.isnull()].index
+    for i in nan_rows:
+        df.at[i, "prop_location_score2"] = -1
+
+    """
+    srch_query_affinity_score
+
+    GEEN IDEE NOG OF DIT HANDIG IS..... ZE HEBBEN VAST MET EEN REDEN DE LOG GENOMEN?
+    Zet ze nu weer om naar probabilities tussen 0 en 1, maar denk dat zij het hadden omgezet omdat
+    je mega kleine waarden krijgt.... Weet niet hoe kut dat is?
+    Iig ook de null waarden naar -1 gezet nu.
+    """
+    nan_rows = df[df.srch_query_affinity_score.isnull()].index
+
+    rows = range(len(df))
+    float_rows = sorted(list(set(rows) - set(nan_rows)))
+    for i in float_rows:
+        df.at[i, "srch_query_affinity_score"] = math.exp(df["srch_query_affinity_score"].iloc[i])
+
+        # als met exp niet werkt is dit een andere optie
+        # df.at[i, "srch_query_affinity_score"] = -1 / df["srch_query_affinity_score"].iloc[i]
+
+    for i in nan_rows:
+        df.at[i, "srch_query_affinity_score"] = -1
+
+    """
+    orig_destination_distance
+    change nan to -1
+    """
+    nan_rows = df[df.orig_destination_distance.isnull()].index
+    for i in nan_rows:
+        df.at[i, "orig_destination_distance"] = -1
+
+
+    return df
 
 
 def drop_cols(df, uninteresting):
@@ -264,43 +319,75 @@ def combine_competitors(df):
 
 
 def prep_data(df_train, df_test):
-    shorten()
-    quit()
+    # shorten()
+    # quit()
     """
     Call all preprocessing functions for training and test set.
     """
+    print("checken of mn python normaal werkt hihaho")
+
+    start = time.time()
 
     data = [df_train, df_test]
 
     df_train = add_category(df_train)
     df_train = get_train_data(df_train)
+    print("door de add_category en train data")
+    print(time.time() - start)
+
+    # df_train = combine_competitors(df_train)
+    # print("door de eerste combine_competitors")
+    # df_test = combine_competitors(df_test)
+    # print("door de tweede combine_competitors")
+    # print(time.time() - start)
+
 
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
     df_train = drop_cols(df_train, uninteresting)
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
     df_test = drop_cols(df_test, uninteresting)
+    print("door de drops")
+    print(time.time() - start)
+
 
     df_train = add_searchorder(df_train)
+    print("door de eerste search order")
     df_test = add_searchorder(df_test)
+    print("door de tweede search order")
+    print(time.time() - start)
 
-    df_train = combine_competitors(df_train)
-    df_test = combine_competitors(df_test)
+
+    # df_train = missing_values(df_train)
+    # df_test = missing_values(df_test)
+    df_train = fill_missing_val(df_train)
+    df_test = fill_missing_val(df_test)
+
+    print("door de missing values")
+    print(time.time() - start)
+
+    # quit()
 
     numeric_train, categorical_train = overview(df_train)
     print(numeric_train)
     numeric_test, categorical_test = overview(df_test)
     print(numeric_test)
+    print("door  beide numeric en categorial tests")
+    print(time.time() - start)
+
 
     # avoid scaling of boolean variables and important id's
     for boolean in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
         numeric_train.remove(boolean)
         numeric_test.remove(boolean)
 
-    df_train = missing_values(df_train)
-    df_test = missing_values(df_test)
+    print("door de boolean removal")
+    print(time.time() - start)
 
     df_train = scale(df_train, numeric_train)
     df_test = scale(df_test, numeric_test)
+
+    print("door de scaling")
+    print(time.time() - start)
 
 
     return df_train, df_test
@@ -320,15 +407,15 @@ if __name__ == "__main__":
     """
 
     # load data to preprocess
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_short.csv")
-    df_train = pd.read_csv("data/training_short.csv")
+    df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    df_test = pd.read_csv("data/test_short.csv")
+    # df_train = pd.read_csv("data/training_short.csv")
 
     df_train, df_test = prep_data(df_train, df_test)
 
     """ Save data in a csv file """
     # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
     # OR RENAME THE ONES BELOW
-    df_test.to_csv("data/test_prep_long2.csv", index=False)
-    # df_train.to_csv("data/train_prep_long2.csv", index=False)
+    # df_test.to_csv("data/test_prep_long_fmv_so.csv", index=False)
+    df_train.to_csv("data/train_prep_long_fmv_so.csv", index=False)
