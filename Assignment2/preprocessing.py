@@ -48,16 +48,16 @@ def shorten():
     # load data
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_selection.csv")
-    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    df_test = pd.read_csv("data/test_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_prep_long.csv")
     # df_test = pd.read_csv("data/test_prep_long.csv")
-    df = pd.read_csv("results/solutions/xgboost_2020-05-17-21-02.csv")
+    # df = pd.read_csv("results/solutions/xgboost_2020-05-17-21-02.csv")
     # print(df_train.head(10))
     # print(df_test.head(10))
 
     # df_train.sample(n=1000).to_csv("data/train_selection_short.csv", index=False)
-    # df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
-    df.sample(n=1000).to_csv("data/xg_short.csv", index=False)
+    df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
+    # df.sample(n=1000).to_csv("data/xg_short.csv", index=False)
 
 def overview(data):
     """
@@ -264,6 +264,8 @@ def combine_competitors(df):
 
 
 def prep_data(df_train, df_test):
+    shorten()
+    quit()
     """
     Call all preprocessing functions for training and test set.
     """
@@ -312,6 +314,9 @@ if __name__ == "__main__":
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
     After that the preprocessed data will be saved in "preprocessed_train.csv"
     Make sure to delete the previous preprocessed file
+
+    TO AVOID MEMORY ERROR: run first 1 large and one small file, save the output
+    of the large file, then switch and run again
     """
 
     # load data to preprocess
@@ -324,5 +329,6 @@ if __name__ == "__main__":
 
     """ Save data in a csv file """
     # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
+    # OR RENAME THE ONES BELOW
     df_test.to_csv("data/test_prep_long2.csv", index=False)
     # df_train.to_csv("data/train_prep_long2.csv", index=False)

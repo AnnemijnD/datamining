@@ -193,9 +193,9 @@ if __name__ == "__main__":
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
     # preprocess data
-    df_train, df_test = prep_data(df_train, df_test)
-    df_test.to_csv("data/test_prep_long.csv", index=False)
-    df_train.to_csv("data/train_prep_long.csv", index=False)
+    # df_train, df_test = prep_data(df_train, df_test)
+    # df_test.to_csv("data/test_prep_long.csv", index=False)
+    # df_train.to_csv("data/train_prep_long.csv", index=False)
 
     # predicting columns of training set
     predictors = [c for c in df_train.columns if c not in ["prop_id","srch_id","booking_bool",\
