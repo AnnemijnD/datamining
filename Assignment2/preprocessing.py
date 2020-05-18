@@ -9,6 +9,7 @@ import time
 from tqdm import tqdm
 import random
 import math
+import timeit
 from numba import jit # does not work with pandas
 
 
@@ -46,7 +47,7 @@ def shorten():
     """
 
     # load data
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_selection.csv")
     df_test = pd.read_csv("data/test_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_prep_long.csv")
@@ -55,7 +56,7 @@ def shorten():
     # print(df_train.head(10))
     # print(df_test.head(10))
 
-    # df_train.sample(n=1000).to_csv("data/train_selection_short.csv", index=False)
+    df_train.sample(n=1000).to_csv("data/train_short.csv", index=False)
     df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
     # df.sample(n=1000).to_csv("data/xg_short.csv", index=False)
 
@@ -97,7 +98,6 @@ def add_category(df):
 
 def add_searchorder(df):
 
-    df = pd.read_csv("data/test_set_VU_DM.csv")
     df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
     df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
     df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
@@ -264,27 +264,43 @@ def combine_competitors(df):
 
 
 def prep_data(df_train, df_test):
-    shorten()
-    quit()
+    # shorten()
+    # quit()
     """
     Call all preprocessing functions for training and test set.
     """
 
     data = [df_train, df_test]
-
+    time1 = time.time()
     df_train = add_category(df_train)
     df_train = get_train_data(df_train)
+    time2 = time.time()
+    print("preprocessing took ", (time2-time1)*1000.0, " ms")
+    print("(1/6) category added")
 
+    time1 = time.time()
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
     df_train = drop_cols(df_train, uninteresting)
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
     df_test = drop_cols(df_test, uninteresting)
+    time2 = time.time()
+    print("preprocessing took ", (time2-time1)*1000.0, " ms")
+    print("(2/6) columns dropped")
 
+    time1 = time.time()
     df_train = add_searchorder(df_train)
     df_test = add_searchorder(df_test)
+    time2 = time.time()
+    print("preprocessing took ", (time2-time1)*1000.0, " ms")
+    print("(3/6) search order added")
 
+    time1 = time.time()
     df_train = combine_competitors(df_train)
     df_test = combine_competitors(df_test)
+    # print("skip competitors")
+    time2 = time.time()
+    print("preprocessing took ", (time2-time1)*1000.0, " ms")
+    print("(4/6) competitors combined")
 
     numeric_train, categorical_train = overview(df_train)
     print(numeric_train)
@@ -296,11 +312,19 @@ def prep_data(df_train, df_test):
         numeric_train.remove(boolean)
         numeric_test.remove(boolean)
 
+    time1 = time.time()
     df_train = missing_values(df_train)
     df_test = missing_values(df_test)
+    time2 = time.time()
+    print("preprocessing took ", (time2-time1)*1000.0, " ms")
+    print("(5/6) missing values imputed")
 
+    time1 = time.time()
     df_train = scale(df_train, numeric_train)
     df_test = scale(df_test, numeric_test)
+    time2 = time.time()
+    print("preprocessing took ", (time2-time1)*1000.0, " ms")
+    print("(6/6) numerical variables scaled")
 
 
     return df_train, df_test
@@ -315,20 +339,36 @@ if __name__ == "__main__":
     After that the preprocessed data will be saved in "preprocessed_train.csv"
     Make sure to delete the previous preprocessed file
 
-    TO AVOID MEMORY ERROR: run first 1 large and one small file, save the output
+    # TO AVOID MEMORY ERROR: run first 1 large and one small file, save the output
     of the large file, then switch and run again
     """
+    print("START PREPROCESSING DATA\n")
 
     # load data to preprocess
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
     df_test = pd.read_csv("data/test_set_VU_DM.csv")
     # df_test = pd.read_csv("data/test_short.csv")
     df_train = pd.read_csv("data/training_short.csv")
-
+    # test_test = pd.read_csv("data/test_prep_long2-nocomp-rank.csv")
+    # test_traint = pd.read_csv("data/train_prep_long2-nocomp-rank.csv")
+    # print(test_test.shape)
+    # print(test_train.shape)
+    # quit()
+    print("data loaded successfully")
+    # print(df_train.head())
+    # print(df_train.shape)
+    time1 = time.time()
+    print("preprocessing data")
     df_train, df_test = prep_data(df_train, df_test)
+    print("preprocessing successful")
+    time2 = time.time()
+    print("preprocessing took ", (time2-time1)*1000.0, " ms")
+    # print(df_train.head())
+    # print(df_train.shape)
 
     """ Save data in a csv file """
     # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
     # OR RENAME THE ONES BELOW
-    df_test.to_csv("data/test_prep_long2.csv", index=False)
-    # df_train.to_csv("data/train_prep_long2.csv", index=False)
+    print("saving data")
+    df_test.to_csv("data/test_prep_long2-comp-rank.csv", index=False)
+    # df_train.to_csv("data/train_prep_long2-comp-rank.csv", index=False)

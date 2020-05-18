@@ -114,10 +114,10 @@ def model_testing(X_train,y_train):
     # for testing amount of layers, each layer has 32 neurons
     # layers = [[32, 32], [32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32],\
     #         [32, 32, 32, 32, 32], [32, 32, 32, 32, 32, 32]]
-    layers = [[1], [2], [4], [8], [16], [32], [64], [128], [256]]
+    layers = [[8], [16], [32], [64], [128], [256]]
 
     # activation = ["linear", "sigmoid", "relu", "softmax"]
-    activation = ["linear", "relu"]
+    activation = ["relu"]
     runs = 1
     for i, act in enumerate(activation):
         val_accs = []
