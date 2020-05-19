@@ -16,7 +16,7 @@ sns.set()
 sns.set_color_codes("pastel")
 
 
-def create_model(lyrs=[16], act="relu", opt='Adam', dr=0.2):
+def create_model(X_train, lyrs=[16], act="relu", opt='Adam', dr=0.2):
     """
     Creates neural network model with specified amount of layers and activation types.
     """
@@ -66,12 +66,12 @@ def create_prediction(df_test, X_train, y_train, X_test):
     solution = df_test[['srch_id', 'prop_id', 'category']]
 
     date_time = time.strftime("%Y-%m-%d-%H-%M")
-    solution.to_csv("results/unsorted" + str(date_time) + ".csv", index=False)
+    # solution.to_csv("results/unsorted" + str(date_time) + ".csv", index=False)
 
     # save prediction in output file
     solution = solution.sort_values(by='category', ascending=False)
     solution = solution.drop("category", axis=1)
-    solution.to_csv("results/sorted" + str(date_time) + ".csv", index=False)
+    solution.to_csv("results/nn" + str(date_time) + ".csv", index=False)
 
     return val_acc
 
@@ -112,9 +112,9 @@ def model_testing(X_train,y_train):
     """
 
     # for testing amount of layers, each layer has 32 neurons
-    layers = [[32, 32], [32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32],\
-            [32, 32, 32, 32, 32], [32, 32, 32, 32, 32, 32]]
-    # layers = [[1], [2], [4], [8], [16], [32], [64], [128], [256]]
+    # layers = [[32, 32], [32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32],\
+    #         [32, 32, 32, 32, 32], [32, 32, 32, 32, 32, 32]]
+    layers = [[1], [2], [4], [8], [16], [32], [64], [128], [256]]
 
     # activation = ["linear", "sigmoid", "relu", "softmax"]
     activation = ["linear", "relu"]
@@ -193,7 +193,9 @@ if __name__ == "__main__":
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
     # preprocess data
-    # data, df_test = prep_data(df_train, df_test)
+    # df_train, df_test = prep_data(df_train, df_test)
+    # df_test.to_csv("data/test_prep_long.csv", index=False)
+    # df_train.to_csv("data/train_prep_long.csv", index=False)
 
     # predicting columns of training set
     predictors = [c for c in df_train.columns if c not in ["prop_id","srch_id","booking_bool",\
@@ -212,6 +214,6 @@ if __name__ == "__main__":
 
     """ functions """
     # create_model()
-    # param_testing(X_train, y_train)
-    model_testing(X_train, y_train)
+    param_testing(X_train, y_train)
+    # model_testing(X_train, y_train)
     # create_prediction(df_test, X_train, y_train, X_test)

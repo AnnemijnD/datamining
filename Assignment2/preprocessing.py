@@ -10,6 +10,7 @@ from tqdm import tqdm
 import random
 import math
 from numba import jit # does not work with pandas
+import time
 
 
 def display_df(df):
@@ -46,17 +47,18 @@ def shorten():
     """
 
     # load data
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_selection.csv")
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    df_train = pd.read_csv("data/train_prep_long.csv")
-    df_test = pd.read_csv("data/test_prep_long.csv")
-    print(df_train.head(10))
+    # df_train = pd.read_csv("data/train_prep_long.csv")
+    # df_test = pd.read_csv("data/test_prep_long.csv")
+    # df = pd.read_csv("results/solutions/xgboost_2020-05-17-21-02.csv")
+    # print(df_train.head(10))
     # print(df_test.head(10))
 
-    df_train.sample(n=1000).to_csv("data/train_selection_short.csv", index=False)
-    df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
-
+    df_train.sample(n=1000).to_csv("data/training_short.csv", index=False)
+    # df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
+    # df.sample(n=1000).to_csv("data/xg_short.csv", index=False)
 
 def overview(data):
     """
@@ -73,23 +75,44 @@ def overview(data):
     return numeric_columns, categorical_columns
 
 
-def add_category(df):
-    """
-    Add a category based on whether it is booked and clicked, only clicked or neither
-    Only need to run this function once!
-    """
+# def add_category(df):
+#     """
+#     Add a category based on whether it is booked and clicked, only clicked or neither
+#     Only need to run this function once!
+#     """
+#     categories = []
+#     for index, row in df.iterrows():
+#         booked = row['booking_bool']
+#         clicked = row['click_bool']
+#         if booked:
+#             category = 5
+#         elif clicked:
+#             category = 1
+#         else:
+#             category = 0
+#         categories.append(category)
+#     df["category"] = categories
+#
+#     return df
+
+
+def add_category2(df):
+    booked = df[df.booking_bool == 1].index
+    clicked = df[df.click_bool == 1].index
+
+    nr_rows = len(df)
     categories = []
-    for index, row in df.iterrows():
-        booked = row['booking_bool']
-        clicked = row['click_bool']
-        if booked:
-            category = 5
-        elif clicked:
-            category = 1
+    for row in range(nr_rows):
+        if row in booked:
+            categories.append(5)
+        elif row in clicked:
+            categories.append(1)
         else:
-            category = 0
-        categories.append(category)
+            categories.append(0)
+
     df["category"] = categories
+
+    return df
 
 
 def add_searchorder(df):
@@ -103,6 +126,9 @@ def add_searchorder(df):
             df (pandas dataframe )
     """
     # add column n_search n_srchitems
+
+    # df = pd.read_csv("data/test_sohet_VU_DM.csv")
+
     df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
 
     # add column n_booked
@@ -179,6 +205,71 @@ def missing_values(data):
     return data
 
 
+def fill_missing_val(df):
+    """
+    Fill the missing values per column
+    """
+
+    """
+    prop_review_score
+    change nan to -1
+    """
+    df["prop_review_score"].fillna(-1, inplace=True)
+
+    """
+    prop_location_score2
+    change nan to -1
+    """
+    df["prop_location_score2"].fillna(-1, inplace=True)
+
+    """
+    srch_query_affinity_score
+
+    GEEN IDEE NOG OF DIT HANDIG IS..... ZE HEBBEN VAST MET EEN REDEN DE LOG GENOMEN?
+    Zet ze nu weer om naar probabilities tussen 0 en 1, maar denk dat zij het hadden omgezet omdat
+    je mega kleine waarden krijgt.... Weet niet hoe kut dat is?
+    Iig ook de null waarden naar -1 gezet nu.
+    """
+    # nan_rows = df[df.srch_query_affinity_score.isnull()].index
+    #
+    # rows = range(len(df))
+    # float_rows = sorted(list(set(rows) - set(nan_rows)))
+    # for i in float_rows:
+    #     df.at[i, "srch_query_affinity_score"] = math.exp(df["srch_query_affinity_score"].iloc[i])
+    #
+    #     # als met exp niet werkt is dit een andere optie
+    #     # df.at[i, "srch_query_affinity_score"] = -1 / df["srch_query_affinity_score"].iloc[i]
+    #
+    #     # als dat ook niet werkt zouden we als laatste optie alle nan waarden de
+    #     # minimum waarde van de kolom kunnen geven
+    #
+    # for i in nan_rows:
+    #     df.at[i, "srch_query_affinity_score"] = -1
+
+    # ============== above is the 'original'
+    # BOVENSTAANDE NIET VERWIJDEREN NOG. NU SOWIESO IETS WAT NIET ERRORT/ LANG DUURT
+    # MAAR BOVENSTAANDE IDEE IS MISS SLIMMER.
+
+
+
+    df["srch_query_affinity_score"].fillna(1, inplace=True)
+    min_val = min(df["srch_query_affinity_score"])
+
+    df.loc[df["srch_query_affinity_score"] == 1, ["srch_query_affinity_score"]] = min_val
+
+
+    print(df["srch_query_affinity_score"])
+
+
+    """
+    orig_destination_distance
+    change nan to -1
+    """
+    df["orig_destination_distance"].fillna(-1, inplace=True)
+
+    return df
+
+
 def drop_cols(df, uninteresting):
     """
     Drop variables that are not of interest.
@@ -186,37 +277,8 @@ def drop_cols(df, uninteresting):
     df.drop(uninteresting, axis=1, inplace=True)
 
     return df
-
-
-# def prep_data(df_train, df_test):
-#     # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
-#     # df_train = drop_cols(df_train, uninteresting)
-#     # uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
-#     # df_test = drop_cols(df_test, uninteresting)
 #
-#     df_train = combine_competitors(df_train)
-#     df_test = combine_competitors(df_test)
-#
-#     numeric_train, categorical_train = overview(df_train)
-#     print(numeric_train)
-#     numeric_test, categorical_test = overview(df_test)
-#     print(numeric_test)
-#
-#     # avoid scaling of boolean variables and important id's
-#     for boolean in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
-#         numeric_train.remove(boolean)
-#         numeric_test.remove(boolean)
-#
-#     df_train = missing_values(df_train)
-#     df_test = missing_values(df_test)
-#
-#     df_train = scale(df_train, numeric_train)
-#     df_test = scale(df_test, numeric_test)
-#
-#
-#     return df_train, df_test
-
-def combine_competitors(df):
+# def combine_competitors(df):
     """
     Set all NULL values to 0
     Combine
@@ -232,7 +294,6 @@ def combine_competitors(df):
         for i in range(COMP):
             rate = row[f"comp{i + 1}_rate"]
             inv = row[f"comp{i + 1}_inv"]
-
             percentage = row[f"comp{i + 1}_rate_percent_diff"]
             if math.isnan(rate):
                 rate = 0
@@ -277,62 +338,128 @@ def combine_competitors(df):
 
     return df
 
+def combine_competitors2(df):
 
-def prep_data(df_train, df_test):
+    # get all competitor column names
+    COMP = 8
+    comp_cols = []
+    for i in range(COMP):
+        comp_cols.append(f"comp{i + 1}_rate")
+        comp_cols.append(f"comp{i + 1}_inv")
+        comp_cols.append(f"comp{i + 1}_rate_percent_diff")
+
+    # fill NULL values with zero
+    for column in comp_cols:
+        df[column].fillna(0, inplace=True)
+
+    rates_col, invs_col, perc_col = [], [], []
+    for index, row in df.iterrows():
+        rates, invs, percentages = [], [], []
+        for i in range(COMP):
+            rate = row[f"comp{i + 1}_rate"]
+            inv = row[f"comp{i + 1}_inv"]
+            percentage = row[f"comp{i + 1}_rate_percent_diff"]
+            percentage = rate * percentage
+            rates.append(rate)
+            invs.append(inv)
+            percentages.append(percentage)
+
+        percentage = sum(percentages)
+        rate = sum(rates)
+
+        # determine percentage based on rate
+        if rate < 0:
+            percentage /= - rate
+        elif rate > 0:
+            percentage /= rate
+
+        if 0 in invs:
+            inv = 0
+        else:
+            inv = 1
+
+        rates_col.append(rate)
+        invs_col.append(inv)
+        perc_col.append(percentage)
+
+    df = df.drop(comp_cols, axis=1)
+    df["comp_rate"] = rates_col
+    df["comp_inv"] = invs_col
+    df["comp_perc"] = perc_col
+
+    return df
+
+#
+def prep_data(df, settype):
     """
     Call all preprocessing functions for training and test set.
     """
+    start = time.time()
+
+    if settype == "train":
+        df = add_category2(df)
+        df = get_train_data(df)
+        print("door add categories:", time.time() - start)
+
+
+    df = combine_competitors2(df)
+    print("door de eerste combine_competitors:",time.time() - start)
 
 
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
-    df_train = drop_cols(df_train, uninteresting)
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
-    # df_test = drop_cols(df_test, uninteresting)
-    df_train = add_category(df_train)
-    df_train = add_searchorder(df_train)
-    # df_test = add_searchorder(df_test)
+    df = drop_cols(df, uninteresting)
+    print("door drop cols:", time.time() - start)
 
 
-    df_train = combine_competitors(df_train)
-    # df_test = combine_competitors(df_test)
+    df = add_searchorder(df)
+    print("door de eerste search order:", time.time() - start)
 
+    # df = missing_values(df)
 
+    df = fill_missing_val(df)
+    print("door de missing values:", time.time() - start)
 
-    numeric_train, categorical_train = overview(df_train)
-    print(numeric_train)
-    # numeric_test, categorical_test = overview(df_test)
-    # print(numeric_test)
+    numeric, categorical = overview(df)
+    print(numeric)
+    print("door beide numeric en categorial tests:", time.time() - start)
 
     # avoid scaling of boolean variables and important id's
     for boolean in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
-        numeric_train.remove(boolean)
+        numeric.remove(boolean)
         # numeric_test.remove(boolean)
 
-    df_train = missing_values(df_train)
-    # df_test = missing_values(df_test)
+    print("door de boolean removal:",time.time() - start)
 
-    df_train = scale(df_train, numeric_train)
-    # df_test = scale(df_test, numeric_test)
+    df = scale(df, numeric)
+    print("door de scaling:", time.time() - start)
 
-
-    return df_train, df_test
-
+    return df
 
 if __name__ == "__main__":
+
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
     After that the preprocessed data will be saved in "preprocessed_train.csv"
     Make sure to delete the previous preprocessed file
+
+    TO AVOID MEMORY ERROR: run first 1 large and one small file, save the output
+    of the large file, then switch and run again
     """
 
-    """ Select train or test """
+    settype = None
+    while not(settype == "train" or settype == "test"):
+        # settype = input("train or test:").lower()
+        settype = "train"
 
+    save_filepath = f"data/{settype}_preprocessed.csv"
+    open_filepath = "data/fake_data/training_fake.csv"
+    print("HOI LEES JE DIT WEL LEZEN HE!!!!\n")
+    print(f"set {settype.upper()} from file {open_filepath} preprocessed and saved in {save_filepath}\n")
 
-    df_train = pd.read_csv("data/1_BIG_train.csv")
-    df_test = pd.read_csv('data/fake_data/training_fake.csv')
+    # open files
+    df = pd.read_csv(open_filepath)
 
-    df_train, df_test = prep_data(df_train, df_test)
-    # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
-    # df_train.to_csv("data/train_prep_long.csv", index=False)
-    df_train.to_csv("data/train_prep_long.csv", index=False)
+    df = prep_data(df, settype)
+
+    df.to_csv(save_filepath)
