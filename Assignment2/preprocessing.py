@@ -76,25 +76,25 @@ def overview(data):
     return numeric_columns, categorical_columns
 
 
-def add_category(df):
-    """
-    Add a category based on whether it is booked and clicked, only clicked or neither
-    Only need to run this function once!
-    """
-    categories = []
-    for index, row in df.iterrows():
-        booked = row['booking_bool']
-        clicked = row['click_bool']
-        if booked:
-            category = 5
-        elif clicked:
-            category = 1
-        else:
-            category = 0
-        categories.append(category)
-    df["category"] = categories
-
-    return df
+# def add_category(df):
+#     """
+#     Add a category based on whether it is booked and clicked, only clicked or neither
+#     Only need to run this function once!
+#     """
+#     categories = []
+#     for index, row in df.iterrows():
+#         booked = row['booking_bool']
+#         clicked = row['click_bool']
+#         if booked:
+#             category = 5
+#         elif clicked:
+#             category = 1
+#         else:
+#             category = 0
+#         categories.append(category)
+#     df["category"] = categories
+#
+#     return df
 
 
 def add_category2(df):
@@ -117,14 +117,27 @@ def add_category2(df):
 
 
 def add_searchorder(df):
+    """
+    Adds columns (number of items in search, number of times hotel  is booked,
+                    rank of item in search)
+        Args:
+            df (pandas dataframe)
 
-    # df = pd.read_csv("data/test_set_VU_DM.csv")
+        Returns
+            df (pandas dataframe )
+    """
+    # add column n_search n_srchitems
+
+    # df = pd.read_csv("data/test_sohet_VU_DM.csv")
+
     df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
-    df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
-    df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
-    # print(df[["srch_id", "prop_id", "n_srchitems","n_booked", "srch_rank"]].to_string())
 
-    # df.to_csv("data/1_BIG_test.csv")
+    # add column n_booked
+    df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
+
+    # add collumn srch_rank
+    df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
+
     print(df.shape)
 
     return df
@@ -265,29 +278,8 @@ def drop_cols(df, uninteresting):
     df.drop(uninteresting, axis=1, inplace=True)
 
     return df
-
-
-def count_per_hotel(df):
-    hotel_dict = {}
-    df["hotelcount"] = 0
-    for index, row in df.iterrows():
-        prop_id = row["prop_id"]
-        if prop_id in hotel_dict:
-            hotel_dict[prop_id] +=1
-        else:
-            hotel_dict[prop_id] = 1
-
-    for index, row in df.iterrows():
-        prop_id = row["prop_id"]
-        df.loc[index, "hotelcount"] = hotel_dict[prop_id]
-
-    print(df[["srch_id", "prop_id", "hotelcount"]].to_string())
-
-
-    return df
-
-
-def combine_competitors(df):
+#
+# def combine_competitors(df):
     """
     Set all NULL values to 0
     Combine
@@ -347,7 +339,6 @@ def combine_competitors(df):
 
     return df
 
-
 def combine_competitors2(df):
 
     # get all competitor column names
@@ -399,33 +390,26 @@ def combine_competitors2(df):
 
     return df
 
-
-
-def prep_data(df_train, df_test):
-    # shorten()
-    # quit()
+#
+def prep_data(df, settype):
     """
     Call all preprocessing functions for training and test set.
     """
     start = time.time()
 
-    data = [df_train, df_test]
-
-    df_train = add_category2(df_train)
-    df_train = get_train_data(df_train)
-    print("door de add_category en train data")
-    print(time.time() - start)
+    if settype == "train":
+        df = add_category2(df)
+        df = get_train_data(df)
+        print("door add categories:", time.time() - start)
 
 
-    df_train = combine_competitors2(df_train)
-    print("door de eerste combine_competitors")
-    df_test = combine_competitors2(df_test)
-    print("door de tweede combine_competitors")
-    print(time.time() - start)
+    df = combine_competitors2(df)
+    print("door de eerste combine_competitors:",time.time() - start)
 
 
     time1 = time.time()
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+<<<<<<< HEAD
     df_train = drop_cols(df_train, uninteresting)
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
     df_test = drop_cols(df_test, uninteresting)
@@ -479,12 +463,43 @@ def prep_data(df_train, df_test):
 
 
     return df_train, df_test
+=======
+    df = drop_cols(df, uninteresting)
+    print("door drop cols:", time.time() - start)
 
+
+    df = add_searchorder(df)
+    print("door de eerste search order:", time.time() - start)
+
+    # df = missing_values(df)
+
+    df = fill_missing_val(df)
+    print("door de missing values:", time.time() - start)
+
+    numeric, categorical = overview(df)
+    print(numeric)
+    print("door beide numeric en categorial tests:", time.time() - start)
+
+    # avoid scaling of boolean variables and important id's
+    for boolean in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
+        numeric.remove(boolean)
+        # numeric_test.remove(boolean)
+
+    print("door de boolean removal:",time.time() - start)
+
+    df = scale(df, numeric)
+    print("door de scaling:", time.time() - start)
+>>>>>>> fe4a16f6af500c9a1d9e375c4b8e73a5bd5eb1a9
+
+    return df
 
 if __name__ == "__main__":
 
+<<<<<<< HEAD
     shorten()
     quit()
+=======
+>>>>>>> fe4a16f6af500c9a1d9e375c4b8e73a5bd5eb1a9
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
@@ -496,6 +511,7 @@ if __name__ == "__main__":
     """
     print("\nSTART PREPROCESSING DATA\n")
 
+<<<<<<< HEAD
     # load data to preprocess
 
     #
@@ -532,3 +548,21 @@ if __name__ == "__main__":
             df_train.to_csv("data/train_prep_long3-all.csv", index=False)
         elif set == "test":
             df_test.to_csv("data/test_prep_long3-all.csv", index=False)
+=======
+    settype = None
+    while not(settype == "train" or settype == "test"):
+        # settype = input("train or test:").lower()
+        settype = "train"
+
+    save_filepath = f"data/{settype}_preprocessed.csv"
+    open_filepath = "data/fake_data/training_fake.csv"
+    print("HOI LEES JE DIT WEL LEZEN HE!!!!\n")
+    print(f"set {settype.upper()} from file {open_filepath} preprocessed and saved in {save_filepath}\n")
+
+    # open files
+    df = pd.read_csv(open_filepath)
+
+    df = prep_data(df, settype)
+
+    df.to_csv(save_filepath)
+>>>>>>> fe4a16f6af500c9a1d9e375c4b8e73a5bd5eb1a9
