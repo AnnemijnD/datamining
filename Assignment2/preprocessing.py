@@ -112,6 +112,9 @@ def add_category2(df):
 
     df["category"] = categories
 
+    print(df["category"])
+    print(set(df["category"]))
+
     return df
 
 
@@ -245,7 +248,7 @@ def fill_missing_val(df):
     df.loc[df["srch_query_affinity_score"] == 1, ["srch_query_affinity_score"]] = min_val
 
 
-    print(df["srch_query_affinity_score"])
+    # print(df["srch_query_affinity_score"])
 
 
     """
@@ -253,6 +256,14 @@ def fill_missing_val(df):
     change nan to -1
     """
     df["orig_destination_distance"].fillna(-1, inplace=True)
+
+
+    """
+    visitor_hist_starrating
+    """
+    df["visitor_hist_starrating"].fillna(-1, inplace=True)
+    df["visitor_hist_adr_usd"].fillna(-1, inplace=True)
+
 
     return df
 
@@ -396,8 +407,8 @@ def combine_competitors2(df):
     df["comp_inv"] = invs_col
     df["comp_perc"] = perc_col
 
-    return df
 
+    return df
 
 
 def prep_data(df_train, df_test):
@@ -438,10 +449,10 @@ def prep_data(df_train, df_test):
     print(time.time() - start)
 
 
-    # df_train = missing_values(df_train)
-    # df_test = missing_values(df_test)
-    df_train = fill_missing_val(df_train)
-    df_test = fill_missing_val(df_test)
+    df_train = missing_values(df_train)
+    df_test = missing_values(df_test)
+    # df_train = fill_missing_val(df_train)
+    # df_test = fill_missing_val(df_test)
 
     print("door de missing values")
     print(time.time() - start)
@@ -474,10 +485,51 @@ def prep_data(df_train, df_test):
     return df_train, df_test
 
 
+def feature_extraction(df):
+
+
+    # DELETE THESE ROWS IF THE FUNCTION IS USED IN COMBINATION WITH FMV
+    df["visitor_hist_starrating"].fillna(-1, inplace=True)
+    df["visitor_hist_adr_usd"].fillna(-1, inplace=True)
+
+    """ star diff: absolute diff, all rows with null values in hist are -1 """
+
+    # get the absolute difference
+    star_diff = abs(df["visitor_hist_starrating"] - df["prop_starrating"])
+
+    # get the locations of the original null values
+    no_hist = df[df.visitor_hist_starrating == -1].index
+    star_diff.loc[no_hist] = -1
+
+    # combine the two dfs --> add the column
+    df = pd.concat([df, star_diff], axis=1)
+    df = df.rename(columns={0: "star_diff"})
+
+    """ price diff: absolute diff, all rows with null values in hist are -1 """
+    # get the absolute difference
+    price_diff = abs(df["visitor_hist_adr_usd"] - df["price_usd"])
+
+    # get the locations of the original null values
+    no_hist = df[df.visitor_hist_adr_usd == -1].index
+    price_diff.loc[no_hist] = -1
+
+    # combine the two dfs --> add the column
+    df = pd.concat([df, price_diff], axis=1)
+    df = df.rename(columns={0: "price_diff"})
+
+    """ book_prob """
+
+    # booking(prop_id) / counting(prop_id)
+    # number of times that prop_id was booked /number of times prop_id appeared in the data
+
+
+
+
+    """ click_prob """
+
+
 if __name__ == "__main__":
 
-    # shorten()
-    # quit()
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
@@ -490,15 +542,15 @@ if __name__ == "__main__":
 
     # load data to preprocess
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_short.csv")
-    df_train = pd.read_csv("data/training_short.csv")
+    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    df_test = pd.read_csv("data/test_short.csv")
+    # df_train = pd.read_csv("data/training_short.csv")
 
     df_train, df_test = prep_data(df_train, df_test)
 
     """ Save data in a csv file """
     # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
     # OR RENAME THE ONES BELOW
-    # df_train.to_csv("data/TESTTEST.csv")
-    df_test.to_csv("data/test_prep_NIEUW.csv", index=False)
-    # df_train.to_csv("data/train_prep_NIEUW.csv", index=False)
+    df_train.to_csv("data/TESTTEST.csv")
+    # df_test.to_csv("data/test_prep_order.csv", index=False)
+    # df_train.to_csv("data/train_prep_order.csv", index=False)
