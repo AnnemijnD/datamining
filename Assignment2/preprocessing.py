@@ -48,17 +48,17 @@ def shorten():
     """
 
     # load data
-    df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_selection.csv")
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    # df_train = pd.read_csv("data/train_prep_long.csv")
-    # df_test = pd.read_csv("data/test_prep_long.csv")
+    df_train = pd.read_csv("data/train_prep_long3-all.csv")
+    df_test = pd.read_csv("data/test_prep_long3-all.csv")
     # df = pd.read_csv("results/solutions/xgboost_2020-05-17-21-02.csv")
     # print(df_train.head(10))
     # print(df_test.head(10))
 
-    df_train.sample(n=1000).to_csv("data/train_short.csv", index=False)
-    df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
+    df_train.sample(n=1000).to_csv("data/train_prep3_short.csv", index=False)
+    df_test.sample(n=1000).to_csv("data/test_prep3_short.csv", index=False)
     # df.sample(n=1000).to_csv("data/xg_short.csv", index=False)
 
 def overview(data):
@@ -407,15 +407,6 @@ def prep_data(df_train, df_test):
     """
     Call all preprocessing functions for training and test set.
     """
-<<<<<<< HEAD
-    data = [df_train, df_test]
-    time1 = time.time()
-    df_train = add_category(df_train)
-    df_train = get_train_data(df_train)
-    time2 = time.time()
-    print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(1/6) category added\n")
-=======
     start = time.time()
 
     data = [df_train, df_test]
@@ -432,7 +423,6 @@ def prep_data(df_train, df_test):
     print("door de tweede combine_competitors")
     print(time.time() - start)
 
->>>>>>> 8460b20e5614a59ca46e344a624fbd76ae3822f3
 
     time1 = time.time()
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
@@ -450,13 +440,13 @@ def prep_data(df_train, df_test):
     print("preprocessing took ", (time2-time1)*1000.0, " ms")
     print("(3/6) search order added\n")
 
-    time1 = time.time()
-    df_train = combine_competitors(df_train)
-    df_test = combine_competitors(df_test)
-    # print("skip competitors")
-    time2 = time.time()
-    print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(4/6) competitors combined\n")
+    # time1 = time.time()
+    # df_train = combine_competitors(df_train)
+    # df_test = combine_competitors(df_test)
+    # # print("skip competitors")
+    # time2 = time.time()
+    # print("preprocessing took ", (time2-time1)*1000.0, " ms")
+    # print("(4/6) competitors combined\n")
 
     numeric_train, categorical_train = overview(df_train)
     # print(numeric_train)
@@ -493,8 +483,8 @@ def prep_data(df_train, df_test):
 
 if __name__ == "__main__":
 
-    # shorten()
-    # quit()
+    shorten()
+    quit()
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
@@ -507,11 +497,8 @@ if __name__ == "__main__":
     print("\nSTART PREPROCESSING DATA\n")
 
     # load data to preprocess
-<<<<<<< HEAD
-    df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_short.csv")
-    # df_train = pd.read_csv("data/training_short.csv")
+
+    #
     # test_test = pd.read_csv("data/test_prep_long2-nocomp-rank.csv")
     # test_traint = pd.read_csv("data/train_prep_long2-nocomp-rank.csv")
     # print(test_test.shape)
@@ -520,31 +507,28 @@ if __name__ == "__main__":
     print("data loaded successfully\n")
     # print(df_train.head())
     # print(df_train.shape)
-=======
-    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_short.csv")
-    df_train = pd.read_csv("data/training_short.csv")
->>>>>>> 8460b20e5614a59ca46e344a624fbd76ae3822f3
 
-    time1 = time.time()
-    print("preprocessing data")
-    df_train, df_test = prep_data(df_train, df_test)
-    print("preprocessing successful\n")
-    time2 = time.time()
-    print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    # print(df_train.head())
-    # print(df_train.shape)
+    for set in ["train", "test"]:
+        if set == "train":
+            df_train = pd.read_csv("data/training_set_VU_DM.csv")
+            df_test = pd.read_csv("data/test_short.csv")
+        elif set == "test":
+            df_train = pd.read_csv("data/training_short.csv")
+            df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
-    """ Save data in a csv file """
-    # DELETE PREVIOUS PREPROCESS FILE BEFORE SAVING NEW ONES
-    # OR RENAME THE ONES BELOW
-<<<<<<< HEAD
-    print("saving data\n")
-    # df_test.to_csv("data/test_prep_long3-all.csv", index=False)
-    df_train.to_csv("data/train_prep_long3-all.csv", index=False)
-=======
-    # df_train.to_csv("data/TESTTEST.csv")
-    df_test.to_csv("data/test_prep_NIEUW.csv", index=False)
-    # df_train.to_csv("data/train_prep_NIEUW.csv", index=False)
->>>>>>> 8460b20e5614a59ca46e344a624fbd76ae3822f3
+
+        time1 = time.time()
+        print("preprocessing data")
+        df_train, df_test = prep_data(df_train, df_test)
+        print("preprocessing successful\n")
+        # print(df_train.head())
+        # print(df_test.head())
+        time2 = time.time()
+        print("preprocessing took ", (time2-time1)*1000.0, " ms")
+        # print(df_train.head())
+        print(df_train.shape)
+
+        if set == "train":
+            df_train.to_csv("data/train_prep_long3-all.csv", index=False)
+        elif set == "test":
+            df_test.to_csv("data/test_prep_long3-all.csv", index=False)

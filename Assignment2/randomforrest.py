@@ -88,6 +88,12 @@ def XGBoost(Xtrain, Ytrain, df_test, Xtest):
     #
     model = xgb.XGBClassifier(objective='rank:ndcg', num_class=3, seed=7)
     model.fit(X_train, y_train)
+    # feature importance
+    print(model.feature_importances_)
+    # plot
+    plt.bar(range(len(model.feature_importances_)), model.feature_importances_)
+    plt.show()
+    quit()
     # make predictions for test data
     y_pred = model.predict(X_test)
     predictions = [round(value) for value in y_pred]
@@ -96,31 +102,39 @@ def XGBoost(Xtrain, Ytrain, df_test, Xtest):
     print("Accuracy: %.2f%%" % (accuracy * 100.0))
 
     """ prediction """
-    # df_test['category'] = model.predict(Xtest)
-    #
-    # solution = df_test[['srch_id', 'prop_id', 'category']]
-    #
-    # date_time = time.strftime("%Y-%m-%d-%H-%M")
-    # solution = solution.sort_values(by='category', ascending=False)
-    # solution = solution.drop("category", axis=1)
-    # print(solution.head())
-    # solution.to_csv('results/solutions/xgboost_' + str(date_time) + ".csv", index=False)
+    df_test['category'] = model.predict(Xtest)
+
+    solution = df_test[['srch_id', 'prop_id', 'category']]
+
+    date_time = time.strftime("%Y-%m-%d-%H-%M")
+    solution.to_csv('results/solutions/xgboost_unsorted_' + str(date_time) + ".csv", index=False)
+    solution = solution.sort_values(by='category', ascending=False)
+    solution.to_csv('results/solutions/xgboost_sort_undrop_' + str(date_time) + ".csv", index=False)
+    solution = solution.drop("category", axis=1)
+    print(solution.head())
+    solution.to_csv('results/solutions/xgboost_' + str(date_time) + ".csv", index=False)
 
 
 
 if __name__ == "__main__":
     # df_train = pd.read_csv("data/train_selection.csv")
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_prep_long.csv")
-    df_train = pd.read_csv("data/train_prep_long.csv")
+    # df_test = pd.read_csv("data/test_prep_long3-all.csv")
+    # df_train = pd.read_csv("data/train_prep_long3-all.csv")
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    #
+    # df = pd.read_csv("results/solutions/xgboost_unsorted_2020-05-19-08-42.csv")
+    # solution = df[['srch_id', 'prop_id']]
+    # date_time = time.strftime("%Y-%m-%d-%H-%M")
+    # solution.to_csv('results/solutions/xgboost_unsorted_' + str(date_time) + ".csv", index=False)
+    # quit()
 
     predictors = [c for c in df_train.columns if c not in ["prop_id","srch_id","booking_bool",\
-                                "click_bool","gross_bookings_usd","position", "category"]]
+                                "click_bool","gross_bookings_usd","position", "category", "visitor_hist_starrating", "visitor_hist_adr_usd"]]
     X_train = df_train[predictors]
 
     # predicting columns of test set
-    cols = [col for col in df_test.columns if col not in ['prop_id', 'srch_id']]
+    cols = [col for col in df_test.columns if col not in ['prop_id', 'srch_id', "visitor_hist_starrating", "visitor_hist_adr_usd"]]
     X_test = df_test[cols]
     y_train = df_train.category.astype(int)
 
