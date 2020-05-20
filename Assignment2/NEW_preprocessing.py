@@ -260,6 +260,12 @@ def scale(df):
     vars.remove("prop_country_id")
     vars.remove("visitor_location_country_id")
     vars.remove("srch_id")
+
+    # avoid scaling of boolean variables and important id's
+    for boolean in ['random_bool', "prop_brand_bool", "promotion_flag",\
+     'srch_saturday_night_bool']:
+        vars.remove(boolean)
+        
     try:
         vars.remove("category")
     except:
