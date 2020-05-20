@@ -65,22 +65,59 @@ def competitors(df):
     """
     Add all competitor variables to each other.
     """
+
+    # get all competitor column names
+    COMP = 8
+    comp_cols = []
+    for i in range(COMP):
+        comp_cols.append(f"comp{i + 1}_rate")
+        comp_cols.append(f"comp{i + 1}_inv")
+        comp_cols.append(f"comp{i + 1}_rate_percent_diff")
+
+    # fill NULL values with zero
+    for column in comp_cols:
+        df[column].fillna(0, inplace=True)
+
     comp_vars = ["rate", "inv", "rate_percent_diff"]
 
+    # combine the columns
     for var in comp_vars:
-        comp_var = df[f"comp1_{var}"].fillna(0)
 
-        for i in range(2, 9):
-            comp_var += df[f"comp{i}_{var}"].fillna(0)
+        comp_var = df[f"comp1_{var}"]
 
-        for i in range(1, 9):
-            df = drop_cols(df, [f"comp{i}_{var}"])
+        if var == "rate_percent_diff":
+            comp_var = df[f"comp1_{var}"] * df["comp1_rate"]
+            for i in range(2, 9):
+                comp_var += df[f"comp{i}_{var}"] * df[f"comp{i}_rate"]
+        else:
+            for i in range(2, 9):
+                comp_var += df[f"comp{i}_{var}"]
 
         df[f"comp_{var}"] = comp_var
 
         del var
 
+    df["comp_rate_percent_diff"] = df.apply(lambda row: row["comp_rate_percent_diff"]
+                                                / divide_perc(row), axis=1)
+
+    # drop columns
+    for var in comp_vars:
+        for i in range(1, 9):
+            df = drop_cols(df, [f"comp{i}_{var}"])
+
+        del var
+
     return df
+
+
+def divide_perc(row):
+
+    if row["comp_rate"] > 0:
+        return row["comp_rate"]
+    elif row["comp_rate"] < 0:
+        return abs(row["comp_rate"])
+    else:
+       return 1
 
 
 def ranking(df):
@@ -126,13 +163,19 @@ def price_star_diff(df):
     price and the history of the user.
     If historical data is missing, the penalty is -1.
     """
+
     df["star_diff"] = abs(df["visitor_hist_starrating"] - df["prop_starrating"])
     no_hist = df[df.visitor_hist_starrating == -1].index
-    df["star_diff"].loc[no_hist] = -1
+    if len(no_hist) > 0 :
+        for row in no_hist:
+            df.at[row, "star_diff"] = -1
 
     df["price_diff"] = abs(df["visitor_hist_adr_usd"] - df["price_usd"])
     no_hist = df[df.visitor_hist_adr_usd == -1].index
-    df["price_diff"].loc[no_hist] = -1
+    if len(no_hist) > 0 :
+        for row in no_hist:
+            df.at[row, "star_diff"] = -1
+
     return df
 
 
@@ -204,6 +247,7 @@ def prep_data(df, datatype):
 
 
 if __name__ == "__main__":
+
     """
     Run this file to preprocessing training and test data.
     Specify the output files accordingly.
@@ -225,8 +269,8 @@ if __name__ == "__main__":
 
     # datatypes = ["training", "test"]
 
-    # datatypes = ["test"]
-    datatypes = ["training"]
+    datatypes = ["test"]
+    # datatypes = ["training"]
 
     for datatype in datatypes:
 
