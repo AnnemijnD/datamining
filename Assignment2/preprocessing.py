@@ -137,7 +137,7 @@ def add_searchorder(df):
     # add collumn srch_rank
     df["srch_rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
 
-    print(df.shape)
+    # print(df.shape)
 
     return df
 
@@ -153,7 +153,7 @@ def get_train_data(df):
     cat1 = df[df.category == 1].index
     cat2 = df[df.category == 0].index
     amount = int(len(df) * .04)
-    print("amount of rows selected: ", amount)
+    # print("amount of rows selected: ", amount)
 
     cat2_selec = np.random.choice(cat2, amount, replace=False)
 
@@ -258,7 +258,7 @@ def fill_missing_val(df):
     df.loc[df["srch_query_affinity_score"] == 1, ["srch_query_affinity_score"]] = min_val
 
 
-    print(df["srch_query_affinity_score"])
+    # print(df["srch_query_affinity_score"])
 
 
     """
@@ -352,6 +352,8 @@ def combine_competitors2(df):
     for column in comp_cols:
         df[column].fillna(0, inplace=True)
 
+
+
     rates_col, invs_col, perc_col = [], [], []
     for index, row in df.iterrows():
         rates, invs, percentages = [], [], []
@@ -396,6 +398,7 @@ def prep_data(df, settype):
     """
     start = time.time()
 
+
     if settype == "train":
         df = add_category2(df)
         df = get_train_data(df)
@@ -404,7 +407,7 @@ def prep_data(df, settype):
 
     df = combine_competitors2(df)
     print("door de eerste combine_competitors:",time.time() - start)
-
+    exit()
 
     uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
     df = drop_cols(df, uninteresting)
@@ -450,10 +453,10 @@ if __name__ == "__main__":
     settype = None
     while not(settype == "train" or settype == "test"):
         # settype = input("train or test:").lower()
-        settype = "train"
+        settype = "test"
 
     save_filepath = f"data/{settype}_preprocessed.csv"
-    open_filepath = "data/fake_data/training_fake.csv"
+    open_filepath = "data/test_set_VU_DM.csv"
     print("HOI LEES JE DIT WEL LEZEN HE!!!!\n")
     print(f"set {settype.upper()} from file {open_filepath} preprocessed and saved in {save_filepath}\n")
 
@@ -462,4 +465,4 @@ if __name__ == "__main__":
 
     df = prep_data(df, settype)
 
-    df.to_csv(save_filepath)
+    # df.to_csv(save_filepath)
