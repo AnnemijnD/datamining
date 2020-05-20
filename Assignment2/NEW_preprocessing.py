@@ -71,7 +71,7 @@ def competitors(df):
         comp_var = df[f"comp1_{var}"].fillna(0)
 
         for i in range(2, 9):
-            df[f"comp_{var}"] += df[f"comp{i}_{var}"].fillna(0)
+            comp_var += df[f"comp{i}_{var}"].fillna(0)
 
         for i in range(1, 9):
             df = drop_cols(df, [f"comp{i}_{var}"])
@@ -214,7 +214,9 @@ if __name__ == "__main__":
 
     print("\nSTART PREPROCESSING DATA\n")
 
-    datatypes = ["training", "test"]
+    # datatypes = ["training", "test"]
+
+    datatypes = ["test"]
 
     for datatype in datatypes:
 
