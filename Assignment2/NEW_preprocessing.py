@@ -308,8 +308,12 @@ if __name__ == "__main__":
         save_filepath = f"data/{datatype}_prep_NEW1.csv"
 
         start = time.time()
+<<<<<<< HEAD
         open_filepath = f"data/fake_data/training_fake.csv"
         # open_filepath = f"data/{datatype}_set_VU_DM.csv"
+=======
+        open_filepath = f"data/{datatype}_set_VU_DM.csv"
+>>>>>>> 48882aaac990c248d732e6f5ef1acb1960a3ffb5
         # open_filepath = f"data/{datatype}_short.csv"
 
 
