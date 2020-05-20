@@ -26,7 +26,7 @@ def add_category(df):
     Add category to training data.
     """
     df["category"] = df.apply(lambda row: transform_cat(row), axis=1)
-
+    df = drop_cols(df, ["booking_bool", "click_bool"])
     return df
 
 
@@ -305,7 +305,7 @@ if __name__ == "__main__":
 
     for datatype in datatypes:
 
-        save_filepath = f"data/{datatype}_prep_newTEST.csv"
+        save_filepath = f"data/{datatype}_prep_NEW1.csv"
 
         start = time.time()
         open_filepath = f"data/fake_data/training_fake.csv"
@@ -326,6 +326,6 @@ if __name__ == "__main__":
         print("\ntotal time: ", np.round((time.time() - start) / 60, 2))
         # df.to_csv(save_filepath)
 
-        # df.sample(n=10000).to_csv("data/test_TESTTEST.csv", index=False)
+        df.sample(n=10000).to_csv(f"data/{datatype}_prep_NEW1-SHORT.csv", index=False)
 
         del df
