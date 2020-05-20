@@ -10,7 +10,9 @@ from numpy.random import seed
 import tensorflow as tf
 import seaborn as sns
 import time
-from preprocessing import prep_data
+from NEW_preprocessing import prep_data
+from sklearn.preprocessing import LabelEncoder
+from keras.utils import np_utils
 
 sns.set()
 sns.set_color_codes("pastel")
@@ -38,7 +40,7 @@ def create_model(X_train, lyrs=[16], act="relu", opt='Adam', dr=0.2):
     model.add(Dropout(dr))
 
     # create output layer
-    model.add(Dense(1, activation="sigmoid"))  # output layer
+    model.add(Dense(3, activation="sigmoid"))  # output layer
     model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     return model
@@ -50,17 +52,31 @@ def create_prediction(df_test, X_train, y_train, X_test):
     """
 
     # make model: with or without dropout between hidden layers
+
     model = create_model(X_train)
     # model = create_dropout_model()
     # print(model.summary())
 
     # train model
-    training = model.fit(X_train, y_train, epochs=25, batch_size=50,\
+    encoder = LabelEncoder()
+    encoder.fit(y_train)
+    encoded_Y = encoder.transform(y_train)
+    y_train_hot = np_utils.to_categorical(encoded_Y)
+    print(y_train_hot)
+    print(X_train.shape, X_test.shape )
+    for column in X_test.columns:
+        if column not in X_train.columns:
+            print(column)
+    # print(X_test.columns)
+
+    training = model.fit(X_train, y_train_hot, epochs=25, batch_size=50,\
                         validation_split=0.2, verbose=0)
     val_acc = np.mean(training.history['val_accuracy'])
     print("NN model validation accuracy during training: ", val_acc)
 
     # calculate predictions for test dataset
+    print(model.predict(X_test))
+    exit()
     df_test['category'] = model.predict(X_test)
     print(df_test.head())
     solution = df_test[['srch_id', 'prop_id', 'category']]
@@ -100,8 +116,8 @@ def create_model_testing(lyrs, act, opt='Adam', dr=0.2):
     model.add(Dropout(dr))
 
     # create output layer
-    model.add(Dense(1, activation="sigmoid"))  # output layer
-    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
+    model.add(Dense(3, activation="softmax"))  # output layer
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     return model
 
@@ -188,12 +204,23 @@ def param_testing(X_train, y_train):
 if __name__ == "__main__":
     # df_train = pd.read_csv("data/train_selection.csv")
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_prep_order.csv")
-    df_train = pd.read_csv("data/train_prep_order.csv")
-    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    # df_test = pd.read_csv("data/test_prep_order.csv")
 
+    df_train = pd.read_csv("data/fake_data/training_fake.csv")
+    # predictors = [c for c in df_train.columns if c not in ["booking_bool",\
+    #                             "click_bool","gross_bookings_usd","position"]]
+    # X_train = df_train[predictors]
+    # X_train.to_csv("data/fake_data/testing_fake.csv", index=False)
+    # exit()
+
+    # df_test = pd.read_csv("data/test_set_VU_DM.csv")
+    df_test = pd.read_csv("data/fake_data/testing_fake.csv")
     # preprocess data
-    # df_train, df_test = prep_data(df_train, df_test)
+    df_train = prep_data(df_train, "training")
+    # exit()
+    df_test = prep_data(df_test, "testing")
+    # print(df_train["category"])
+    # exit()
     # df_test.to_csv("data/test_prep_long.csv", index=False)
     # df_train.to_csv("data/train_prep_long.csv", index=False)
 
@@ -209,8 +236,10 @@ if __name__ == "__main__":
     # X_test.drop(["srch_id", "prop_id"], axis=1, inplace=True)
 
     # prediction (outcome) variable
-    y_train = df_train.category.astype(int)
-
+    # y_train = df_train.caategory.astype(int)
+    # print(y_train.to_string())
+    # exit()
+    y_train = df_train["category"]
 
     """ functions """
     # create_model()

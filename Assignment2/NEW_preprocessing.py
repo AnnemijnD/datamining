@@ -8,7 +8,8 @@ import time
 import random
 import math
 import time
-
+import os
+import sys
 
 
 def drop_cols(df, cols):
@@ -25,6 +26,7 @@ def add_category(df):
     Add category to training data.
     """
     df["category"] = df.apply(lambda row: transform_cat(row), axis=1)
+    df = drop_cols(df, ["booking_bool", "click_bool"])
     return df
 
 
@@ -123,6 +125,58 @@ def divide_perc(row):
 def ranking(df):
     df['rank'] = df.groupby('srch_id')['category'].rank(ascending=True)
     print(df.head())
+
+def stats(df):
+
+    # add rank
+    df["rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
+
+
+    # add means
+    strings = ["srch_id", "prop_id", "loc"]
+
+    for str in strings:
+        if str == "loc":
+            key = "prop_country_id"
+        else:
+            key = str
+
+        str = "_" + str
+
+        df[f"mean_price_usd{str}"] = df.groupby(key)["price_usd"].transform('mean')
+
+        if not str == "prop_id":
+
+            df[f"mean_prop_starrating{str}"] = df.groupby(key)["prop_starrating"].transform('mean')
+            df[f"mean_prop_review_score{str}"] = df.groupby(key)["prop_review_score"].transform('mean')
+            df[f"mean_prop_location_score1{str}"] = df.groupby(key)["prop_location_score1"].transform('mean')
+            df[f"mean_prop_location_score2{str}"] = df.groupby(key)["prop_location_score2"].transform('mean')
+            df[f"mean_prop_log_historical_price{str}"] = df.groupby(key)["prop_log_historical_price"].transform('mean')
+
+        if not str=="srch_id":
+            df[f"mean_srch_length_of_stay{str}"] = df.groupby(key)["srch_length_of_stay"].transform('mean')
+            df[f"mean_srch_booking_window{str}"] = df.groupby(key)["srch_booking_window"].transform('mean')
+            df[f"mean_srch_adults_count{str}"] = df.groupby(key)["srch_adults_count"].transform('mean')
+            df[f"mean_srch_children_count{str}"] = df.groupby(key)["srch_children_count"].transform('mean')
+            df[f"mean_srch_room_count{str}"] = df.groupby(key)["srch_room_count"].transform('mean')
+            df[f"mean_srch_query_affinity_score{str}"] = df.groupby(key)["srch_query_affinity_score"].transform('mean')
+            df[f"mean_orig_destination_distance{str}"] = df.groupby(key)["orig_destination_distance"].transform('mean')
+
+        # + 27 cols
+
+    # add counts
+    df[f'n_props_srch'] = df.groupby('srch_id')['prop_id'].transform('count')
+    df[f'n_props_loc'] = df.groupby("prop_country_id")['prop_id'].transform('count')
+    df[f'n_srchitems_loc'] = df.groupby("prop_country_id")['srch_id'].transform('count')
+    df[f'n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
+    df[f'n_srchitems_prop'] = df.groupby('prop_id')['srch_id'].transform('count')
+    df[f"freq_country"] = df.groupby("prop_country_id")['prop_country_id'].transform('count')
+    df[f"freq_prop"] = df.groupby("prop_id")['prop_id'].transform('count')
+
+    # + 7 cols
+
+    df.fillna(-1, inplace=True)
+
     return df
 
 
@@ -185,6 +239,7 @@ def seasonality(df):
     """
     df_datetime = pd.DatetimeIndex(df.date_time)
     df["month"] = df_datetime.month
+    df = drop_cols(df, ["date_time"])
 
     return df
 
@@ -199,13 +254,36 @@ def scale(df):
     # select numerical variables
     vars = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
-    # exclude prop_id, srch_id
+    # exclude prop_id, srch_id, location ids
     vars.remove("prop_id")
+    vars.remove("prop_country_id")
+    vars.remove("visitor_location_country_id")
     vars.remove("srch_id")
+    try:
+        vars.remove("category")
+    except:
+        pass
 
     for var in vars:
         df[var] = df[var].astype("float64")
         df[var] = scaler.fit_transform(df[var].values.reshape(-1, 1))
+
+
+    return df
+
+
+def categorical(df):
+    """
+    Make categorical variables numerical by converting them to multiple binary
+    variable columns for each factor in the variable.
+    """
+
+    # variables which need to be transformed to categorical
+    categorical = ["prop_country_id", "visitor_location_country_id"]
+
+    for var in categorical:
+        df = pd.concat([df, pd.get_dummies(df[var], prefix=var)], axis=1)
+        del df[var]
 
     return df
 
@@ -220,12 +298,13 @@ def prep_data(df, datatype):
         df = drop_cols(df, "gross_bookings_usd")
         df = add_category(df)
         df = get_train_data(df)
-        df = ranking(df)
+
+    df = stats(df)
     print("(1/6 - train only) add categories and downsample train data: ", np.round((time.time() - start)*1000 / 60, 2), "min")
 
     start = time.time()
     df = competitors(df)
-    print("(2/6) competitors: ", np.round((time.time() - start)*1000 / 60, 2), "min")
+    print("(2/6) competitors: ", np.round((time.time() - start) / 60, 2), "min")
 
     start = time.time()
     df = seasonality(df)
@@ -239,9 +318,18 @@ def prep_data(df, datatype):
     df = price_star_diff(df)
     print("(5/6) price and star difference: ", np.round((time.time() - start)*1000 / 60, 2), "min")
 
+    # print("er zijn nog zoveel nans(2): ", df.isnull().sum().sum())
+    # pd.set_option('display.max_rows', None)
+    # print(df.isnull().sum())
+
+
     start = time.time()
     df = scale(df)
-    print("(6/6) scaling: ", np.round((time.time() - start)*1000 / 60, 2), "min")
+    print("(6/6) scaling: ", np.round((time.time() - start) / 60, 2), "min")
+
+    start = time.time()
+    df = categorical(df)
+    print("(6/6) categorical transformation: ", np.round((time.time() - start) / 60, 2), "min")
 
     return df
 
@@ -258,7 +346,7 @@ if __name__ == "__main__":
         * Downsample data based on categories
         * Combine competitor features
         * (TODO:) add date time feature
-        * (TODO:) add price and star diff feature
+        * add price and star diff feature
         * (TODO:) normalise log price
         * Fill missing values
         * Scale numerical variables
@@ -274,7 +362,7 @@ if __name__ == "__main__":
 
     for datatype in datatypes:
 
-        save_filepath = f"data/{datatype}_prep_newTEST.csv"
+        save_filepath = f"data/{datatype}_prep_NEWTEST.csv"
 
         start = time.time()
         # open_filepath = f"data/{datatype}_set_VU_DM.csv"
@@ -285,13 +373,15 @@ if __name__ == "__main__":
 
         # open files
         df = pd.read_csv(open_filepath)
-        print("file loading: ", (time.time() - start)*1000 / 60, "min")
+        print("file loading: ", np.round((time.time() - start) / 60, 2), "min")
 
         # preprocess data
         df = prep_data(df, datatype)
 
         # save preprocessed data
-        print("\ntotal time: ", np.round((time.time() - start)*1000 / 60, 2))
+        print("\ntotal time: ", np.round((time.time() - start) / 60, 2))
         df.to_csv(save_filepath)
+
+        # df.sample(n=10000).to_csv(f"data/{datatype}_prep_NEW1-SHORT.csv", index=False)
 
         del df
