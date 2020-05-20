@@ -64,7 +64,7 @@ def param_tuning(X_train, y_train):
 
 
 def XGBoost(Xtrain, Ytrain, df_test, Xtest):
-    X_train, X_test, y_train, y_test = train_test_split(Xtrain, Ytrain, test_size=0.33, random_state=7)
+    # X_train, X_test, y_train, y_test = train_test_split(Xtrain, Ytrain, test_size=0.33, random_state=7)
     # gbm = xgb.XGBClassifier(max_depth=3, n_estimators=300, learning_rate=0.05).fit(X_train, y_train)
 
     # """ training """
@@ -119,8 +119,8 @@ def XGBoost(Xtrain, Ytrain, df_test, Xtest):
 if __name__ == "__main__":
     # df_train = pd.read_csv("data/train_selection.csv")
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    # df_test = pd.read_csv("data/test_prep_long3-all.csv")
-    # df_train = pd.read_csv("data/train_prep_long3-all.csv")
+    df_test = pd.read_csv("data/test_prep_long3-all.csv")
+    df_train = pd.read_csv("data/train_prep_long3-all.csv")
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
     #
     # df = pd.read_csv("results/solutions/xgboost_unsorted_2020-05-19-08-42.csv")

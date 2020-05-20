@@ -199,12 +199,12 @@ if __name__ == "__main__":
 
     # predicting columns of training set
     predictors = [c for c in df_train.columns if c not in ["prop_id","srch_id","booking_bool",\
-                                "click_bool","gross_bookings_usd","position", "category"]]
+                                "click_bool","gross_bookings_usd","position", "category", "visitor_hist_starrating", "visitor_hist_adr_usd"]]
     X_train = df_train[predictors]
     # X_train.drop(["srch_id", "prop_id"], axis=1, inplace=True)
 
     # predicting columns of test set
-    cols = [col for col in df_test.columns if col not in ['prop_id', 'srch_id']]
+    cols = [col for col in df_test.columns if col not in ['prop_id', 'srch_id', "visitor_hist_starrating", "visitor_hist_adr_usd"]]
     X_test = df_test[cols]
     # X_test.drop(["srch_id", "prop_id"], axis=1, inplace=True)
 
