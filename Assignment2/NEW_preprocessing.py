@@ -89,6 +89,7 @@ def stats(df):
 
     # add rank
     df["rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
+    df["price_rank_srch"] = df.groupby("srch_id")["price_usd"].rank("first", ascending=True)
 
 
     # add means
@@ -248,7 +249,7 @@ def prep_data(df, datatype):
     if datatype == "training":
         df = drop_cols(df, "gross_bookings_usd")
         df = add_category(df)
-        # df = get_train_data(df)
+        # df = get_train_data(df
 
     df = stats(df)
     print("(1/6 - train only) add categories and downsample train data: ", np.round((time.time() - start)*1000 / 60, 2), "min")
@@ -308,12 +309,8 @@ if __name__ == "__main__":
         save_filepath = f"data/{datatype}_prep_NEW1.csv"
 
         start = time.time()
-<<<<<<< HEAD
         open_filepath = f"data/fake_data/training_fake.csv"
-        # open_filepath = f"data/{datatype}_set_VU_DM.csv"
-=======
-        open_filepath = f"data/{datatype}_set_VU_DM.csv"
->>>>>>> 48882aaac990c248d732e6f5ef1acb1960a3ffb5
+        # open_filepath = f"data/{datatygpe}_set_VU_DM.csv"
         # open_filepath = f"data/{datatype}_short.csv"
 
 
@@ -330,6 +327,6 @@ if __name__ == "__main__":
         print("\ntotal time: ", np.round((time.time() - start) / 60, 2))
         # df.to_csv(save_filepath)
 
-        df.sample(n=10000).to_csv(f"data/{datatype}_prep_NEW1-SHORT.csv", index=False)
+        # df.sample(n=10000).to_csv(f"data/{datatype}_prep_NEW1-SHORT.csv", index=False)
 
         del df
