@@ -111,32 +111,41 @@ def missing_values(df):
     df["prop_review_score"].fillna(-1, inplace=True)
     df["prop_location_score1"].fillna(-1, inplace=True)
     df["prop_location_score2"].fillna(-1, inplace=True)
-    df["prop_starrating"].fillna(-1, inplace=True)
+    df["visitor_hist_starrating"].fillna(-1, inplace=True)
+    df["visitor_hist_adr_usd"].fillna(-1, inplace=True)
 
     # replace price by mean of hotels with same starrating
     mean_price_starrating = df.groupby("prop_starrating")["prop_log_historical_price"].transform("mean")
-    print("mean_price_starrating: ", mean_price_starrating)
     df["prop_log_historical_price"].fillna(mean_price_starrating, inplace=True)
 
     # fill by worst possible value in dataset
-    aff_min = df["srch_query_affinity_score"].min
-    print("srch_query_affinity_score: ", aff_min)
-    df["srch_query_affinity_score"].fillna(aff_min)
+    aff_min = df["srch_query_affinity_score"].min()
+    df["srch_query_affinity_score"].fillna(aff_min, inplace=True)
 
-    orig_max = df["orig_destination_distance"].max
-    print("orig_destination_distance: ", orig_max)
-    df["orig_destination_distance"].fillna(orig_max)
+    # TODO: is dit worst???? hoezo is verder weg slechter?
+    orig_max = df["orig_destination_distance"].max()
+    df["orig_destination_distance"].fillna(orig_max, inplace=True)
 
     # remaining mv's are replaced by mean of column
-    df = df.fillna(df.mean())
+    # df = df.fillna(df.mean())
+    print("er zijn nog zoveel nans: ", df.isnull().sum().sum())
 
     return df
 
 
 def price_star_diff(df):
-    # TODO: DIT KAN RAAR ZIJN? CHECKEN???
-    df["star_diff"] = df["visitor_hist_starrating"].fillna(df["visitor_hist_starrating"].mean()) - df["prop_starrating"].fillna(-10)
-    df["price_diff"] = df["visitor_hist_adr_usd"].fillna(df["visitor_hist_adr_usd"].mean()) - df["price_usd"].fillna(df["price_usd"].mean())
+    """
+    Calculate the absolute difference between respectively the starrating and
+    price and the history of the user.
+    If historical data is missing, the penalty is -1.
+    """
+    df["star_diff"] = abs(df["visitor_hist_starrating"] - df["prop_starrating"])
+    no_hist = df[df.visitor_hist_starrating == -1].index
+    df["star_diff"].loc[no_hist] = -1
+
+    df["price_diff"] = abs(df["visitor_hist_adr_usd"] - df["price_usd"])
+    no_hist = df[df.visitor_hist_adr_usd == -1].index
+    df["price_diff"].loc[no_hist] = -1
     return df
 
 
@@ -146,6 +155,7 @@ def seasonality(df):
     """
     df_datetime = pd.DatetimeIndex(df.date_time)
     df["month"] = df_datetime.month
+    df = drop_cols(df, ["date_time"])
 
     return df
 
@@ -160,8 +170,10 @@ def scale(df):
     # select numerical variables
     vars = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
-    # exclude prop_id, srch_id
+    # exclude prop_id, srch_id, location ids
     vars.remove("prop_id")
+    vars.remove("prop_country_id")
+    vars.remove("visitor_location_country_id")
     vars.remove("srch_id")
     try:
         vars.remove("category")
@@ -176,45 +188,20 @@ def scale(df):
     return df
 
 
-def feature_extraction(df):
+def categorical(df):
+    """
+    Make categorical variables numerical by converting them to multiple binary
+    variable columns for each factor in the variable.
+    """
 
+    # variables which need to be transformed to categorical
+    categorical = ["prop_country_id", "visitor_location_country_id"]
 
-    # DELETE THESE ROWS IF THE FUNCTION IS USED IN COMBINATION WITH FMV
-    df["visitor_hist_starrating"].fillna(-1, inplace=True)
-    df["visitor_hist_adr_usd"].fillna(-1, inplace=True)
+    for var in categorical:
+        df = pd.concat([df, pd.get_dummies(df[var], prefix=var)], axis=1)
+        del df[var]
 
-    """ star diff: absolute diff, all rows with null values in hist are -1 """
-
-    # get the absolute difference
-    star_diff = abs(df["visitor_hist_starrating"] - df["prop_starrating"])
-
-    # get the locations of the original null values
-    no_hist = df[df.visitor_hist_starrating == -1].index
-    star_diff.loc[no_hist] = -1
-
-    # combine the two dfs --> add the column
-    df = pd.concat([df, star_diff], axis=1)
-    df = df.rename(columns={0: "star_diff"})
-
-    """ price diff: absolute diff, all rows with null values in hist are -1 """
-    # get the absolute difference
-    price_diff = abs(df["visitor_hist_adr_usd"] - df["price_usd"])
-
-    # get the locations of the original null values
-    no_hist = df[df.visitor_hist_adr_usd == -1].index
-    price_diff.loc[no_hist] = -1
-
-    # combine the two dfs --> add the column
-    df = pd.concat([df, price_diff], axis=1)
-    df = df.rename(columns={0: "price_diff"})
-
-    """ book_prob """
-
-    # booking(prop_id) / counting(prop_id)
-    # number of times that prop_id was booked /number of times prop_id appeared in the data
-
-
-    """ click_prob """
+    return df
 
 
 def prep_data(df, datatype):
@@ -233,24 +220,27 @@ def prep_data(df, datatype):
 
     start = time.time()
     df = competitors(df)
-    print("(2/6) competitors: ", np.round((time.time() - start)*1000 / 60, 2), "min")
-
-    start = time.time()
-    df = price_star_diff(df) # mss na missing values
-    print("(3/6) price and star difference: ", np.round((time.time() - start)*1000 / 60, 2), "min")
+    print("(2/6) competitors: ", np.round((time.time() - start) / 60, 2), "min")
 
     start = time.time()
     df = seasonality(df)
-    print("(4/6) seasons: ", np.round((time.time() - start)*1000 / 60, 2), "min")
+    print("(3/6) seasons: ", np.round((time.time() - start)*1000 / 60, 2), "min")
 
     start = time.time()
     df = missing_values(df)
-    print("(5/6) missing values: ", np.round((time.time() - start)*1000 / 60, 2), "min")
+    print("(4/6) missing values: ", np.round((time.time() - start)*1000 / 60, 2), "min")
+
+    start = time.time()
+    df = price_star_diff(df)
+    print("(5/6) price and star difference: ", np.round((time.time() - start)*1000 / 60, 2), "min")
 
     start = time.time()
     df = scale(df)
+    print("(6/6) scaling: ", np.round((time.time() - start) / 60, 2), "min")
 
-    print("(6/6) scaling: ", np.round((time.time() - start)*1000 / 60, 2), "min")
+    start = time.time()
+    df = categorical(df)
+    print("(6/6) categorical transformation: ", np.round((time.time() - start) / 60, 2), "min")
 
     return df
 
@@ -275,13 +265,12 @@ if __name__ == "__main__":
 
     print("\nSTART PREPROCESSING DATA\n")
 
-    # datatypes = ["training", "test"]
+    datatypes = ["training", "test"]
 
-    datatypes = ["test"]
 
     for datatype in datatypes:
 
-        save_filepath = f"data/{datatype}_prep_new1.csv"
+        save_filepath = f"data/{datatype}_prep_newTEST.csv"
 
         start = time.time()
         open_filepath = f"data/fake_data/training_fake.csv"
@@ -293,14 +282,15 @@ if __name__ == "__main__":
 
         # open files
         df = pd.read_csv(open_filepath)
-        print("file loading: ", (time.time() - start)*1000 / 60, "min")
+        print("file loading: ", np.round((time.time() - start) / 60, 2), "min")
 
         # preprocess data
         df = prep_data(df, datatype)
 
         # save preprocessed data
-        print("\ntotal time: ", np.round((time.time() - start)*1000 / 60, 2))
-        exit()
+        print("\ntotal time: ", np.round((time.time() - start) / 60, 2))
         df.to_csv(save_filepath)
+
+        # df.sample(n=10000).to_csv("data/test_TESTTEST.csv", index=False)
 
         del df
