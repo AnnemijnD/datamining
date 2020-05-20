@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ import time
 from tqdm import tqdm
 import random
 import math
+import timeit
 from numba import jit # does not work with pandas
 import time
 
@@ -47,17 +49,17 @@ def shorten():
     """
 
     # load data
-    df_train = pd.read_csv("data/training_set_VU_DM.csv")
+    # df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_selection.csv")
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    # df_train = pd.read_csv("data/train_prep_long.csv")
-    # df_test = pd.read_csv("data/test_prep_long.csv")
+    df_train = pd.read_csv("data/train_prep_long.csv")
+    df_test = pd.read_csv("data/test_prep_long.csv")
     # df = pd.read_csv("results/solutions/xgboost_2020-05-17-21-02.csv")
     # print(df_train.head(10))
     # print(df_test.head(10))
 
-    df_train.sample(n=1000).to_csv("data/training_short.csv", index=False)
-    # df_test.sample(n=1000).to_csv("data/test_short.csv", index=False)
+    df_train.sample(n=1000).to_csv("data/train_prep_short1.csv", index=False)
+    df_test.sample(n=1000).to_csv("data/test_prep_short1.csv", index=False)
     # df.sample(n=1000).to_csv("data/xg_short.csv", index=False)
 
 def overview(data):
@@ -121,7 +123,6 @@ def add_searchorder(df):
                     rank of item in search)
         Args:
             df (pandas dataframe)
-
         Returns
             df (pandas dataframe )
     """
@@ -224,7 +225,6 @@ def fill_missing_val(df):
 
     """
     srch_query_affinity_score
-
     GEEN IDEE NOG OF DIT HANDIG IS..... ZE HEBBEN VAST MET EEN REDEN DE LOG GENOMEN?
     Zet ze nu weer om naar probabilities tussen 0 en 1, maar denk dat zij het hadden omgezet omdat
     je mega kleine waarden krijgt.... Weet niet hoe kut dat is?
@@ -277,66 +277,66 @@ def drop_cols(df, uninteresting):
     df.drop(uninteresting, axis=1, inplace=True)
 
     return df
-#
+
 # def combine_competitors(df):
-    """
-    Set all NULL values to 0
-    Combine
-    For rate: sum the rate of the competitors
-    For inv: set 0 if at least one of them is zero
-    For percentage: sum(rate * percentage) / rate
-        (if rate is zero then don't divide)
-    """
-    COMP = 8
-    rates_col, invs_col, perc_col = [], [], []
-    for index, row in df.iterrows():
-        rates, invs, percentages = [], [], []
-        for i in range(COMP):
-            rate = row[f"comp{i + 1}_rate"]
-            inv = row[f"comp{i + 1}_inv"]
-            percentage = row[f"comp{i + 1}_rate_percent_diff"]
-            if math.isnan(rate):
-                rate = 0
-            if math.isnan(inv):
-                inv = 0
-            if math.isnan(percentage):
-                percentage = 0
-            else:
-                percentage = rate * percentage
-            rates.append(rate)
-            invs.append(inv)
-            percentages.append(percentage)
-
-        percentage = sum(percentages)
-        rate = sum(rates)
-
-        # determine percentage based on rate
-        if rate < 0:
-            percentage /= - rate
-        elif rate > 0:
-            percentage /= rate
-
-        if 0 in invs:
-            inv = 0
-        else:
-            inv = 1
-
-        rates_col.append(rate)
-        invs_col.append(inv)
-        perc_col.append(percentage)
-
-    comp_cols = []
-    for i in range(COMP):
-        comp_cols.append(f"comp{i + 1}_rate")
-        comp_cols.append(f"comp{i + 1}_inv")
-        comp_cols.append(f"comp{i + 1}_rate_percent_diff")
-
-    df = df.drop(comp_cols, axis=1)
-    df["comp_rate"] = rates_col
-    df["comp_inv"] = invs_col
-    df["comp_perc"] = perc_col
-
-    return df
+#     """
+#     Set all NULL values to 0
+#     Combine
+#     For rate: sum the rate of the competitors
+#     For inv: set 0 if at least one of them is zero
+#     For percentage: sum(rate * percentage) / rate
+#         (if rate is zero then don't divide)
+#     """
+#     COMP = 8
+#     rates_col, invs_col, perc_col = [], [], []
+#     for index, row in df.iterrows():
+#         rates, invs, percentages = [], [], []
+#         for i in range(COMP):
+#             rate = row[f"comp{i + 1}_rate"]
+#             inv = row[f"comp{i + 1}_inv"]
+#             percentage = row[f"comp{i + 1}_rate_percent_diff"]
+#             if math.isnan(rate):
+#                 rate = 0
+#             if math.isnan(inv):
+#                 inv = 0
+#             if math.isnan(percentage):
+#                 percentage = 0
+#             else:
+#                 percentage = rate * percentage
+#             rates.append(rate)
+#             invs.append(inv)
+#             percentages.append(percentage)
+#
+#         percentage = sum(percentages)
+#         rate = sum(rates)
+#
+#         # determine percentage based on rate
+#         if rate < 0:
+#             percentage /= - rate
+#         elif rate > 0:
+#             percentage /= rate
+#
+#         if 0 in invs:
+#             inv = 0
+#         else:
+#             inv = 1
+#
+#         rates_col.append(rate)
+#         invs_col.append(inv)
+#         perc_col.append(percentage)
+#
+#     comp_cols = []
+#     for i in range(COMP):
+#         comp_cols.append(f"comp{i + 1}_rate")
+#         comp_cols.append(f"comp{i + 1}_inv")
+#         comp_cols.append(f"comp{i + 1}_rate_percent_diff")
+#
+#     df = df.drop(comp_cols, axis=1)
+#     df["comp_rate"] = rates_col
+#     df["comp_inv"] = invs_col
+#     df["comp_perc"] = perc_col
+#
+#     return df
 
 def combine_competitors2(df):
 
@@ -391,7 +391,7 @@ def combine_competitors2(df):
 
     return df
 
-#
+
 def prep_data(df, settype):
     """
     Call all preprocessing functions for training and test set.
@@ -409,12 +409,17 @@ def prep_data(df, settype):
     print("door de eerste combine_competitors:",time.time() - start)
     exit()
 
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    time1 = time.time()
+    if settype == "train":
+        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    else:
+        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
+
     df = drop_cols(df, uninteresting)
     print("door drop cols:", time.time() - start)
 
 
-    df = add_searchorder(df)
+    # df = add_searchorder(df)
     print("door de eerste search order:", time.time() - start)
 
     # df = missing_values(df)
@@ -438,25 +443,69 @@ def prep_data(df, settype):
 
     return df
 
+
+def feature_extraction(df):
+
+
+    # DELETE THESE ROWS IF THE FUNCTION IS USED IN COMBINATION WITH FMV
+    df["visitor_hist_starrating"].fillna(-1, inplace=True)
+    df["visitor_hist_adr_usd"].fillna(-1, inplace=True)
+
+    """ star diff: absolute diff, all rows with null values in hist are -1 """
+
+    # get the absolute difference
+    star_diff = abs(df["visitor_hist_starrating"] - df["prop_starrating"])
+
+    # get the locations of the original null values
+    no_hist = df[df.visitor_hist_starrating == -1].index
+    star_diff.loc[no_hist] = -1
+
+    # combine the two dfs --> add the column
+    df = pd.concat([df, star_diff], axis=1)
+    df = df.rename(columns={0: "star_diff"})
+
+    """ price diff: absolute diff, all rows with null values in hist are -1 """
+    # get the absolute difference
+    price_diff = abs(df["visitor_hist_adr_usd"] - df["price_usd"])
+
+    # get the locations of the original null values
+    no_hist = df[df.visitor_hist_adr_usd == -1].index
+    price_diff.loc[no_hist] = -1
+
+    # combine the two dfs --> add the column
+    df = pd.concat([df, price_diff], axis=1)
+    df = df.rename(columns={0: "price_diff"})
+
+    """ book_prob """
+
+    # booking(prop_id) / counting(prop_id)
+    # number of times that prop_id was booked /number of times prop_id appeared in the data
+
+
+    """ click_prob """
+
+
 if __name__ == "__main__":
+    shorten()
+    quit()
 
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
     After that the preprocessed data will be saved in "preprocessed_train.csv"
     Make sure to delete the previous preprocessed file
-
-    TO AVOID MEMORY ERROR: run first 1 large and one small file, save the output
+    # TO AVOID MEMORY ERROR: run first 1 large and one small file, save the output
     of the large file, then switch and run again
     """
+    print("\nSTART PREPROCESSING DATA\n")
 
     settype = None
     while not(settype == "train" or settype == "test"):
         # settype = input("train or test:").lower()
         settype = "test"
-
+# /Volumes/DATA/datamining/training_fake.csv
     save_filepath = f"data/{settype}_preprocessed.csv"
-    open_filepath = "data/test_set_VU_DM.csv"
+    # open_filepath = "data/test_set_VU_DM.csv"
     print("HOI LEES JE DIT WEL LEZEN HE!!!!\n")
     print(f"set {settype.upper()} from file {open_filepath} preprocessed and saved in {save_filepath}\n")
 

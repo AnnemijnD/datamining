@@ -71,7 +71,7 @@ def create_prediction(df_test, X_train, y_train, X_test):
     # save prediction in output file
     solution = solution.sort_values(by='category', ascending=False)
     solution = solution.drop("category", axis=1)
-    solution.to_csv("results/nn" + str(date_time) + ".csv", index=False)
+    solution.to_csv("results/nn_NIEUW" + str(date_time) + ".csv", index=False)
 
     return val_acc
 
@@ -114,10 +114,10 @@ def model_testing(X_train,y_train):
     # for testing amount of layers, each layer has 32 neurons
     # layers = [[32, 32], [32, 32, 32], [32, 32, 32, 32], [32, 32, 32, 32],\
     #         [32, 32, 32, 32, 32], [32, 32, 32, 32, 32, 32]]
-    layers = [[1], [2], [4], [8], [16], [32], [64], [128], [256]]
+    layers = [[8], [16], [32], [64], [128], [256]]
 
     # activation = ["linear", "sigmoid", "relu", "softmax"]
-    activation = ["linear", "relu"]
+    activation = ["relu"]
     runs = 1
     for i, act in enumerate(activation):
         val_accs = []
@@ -188,8 +188,8 @@ def param_testing(X_train, y_train):
 if __name__ == "__main__":
     # df_train = pd.read_csv("data/train_selection.csv")
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
-    df_test = pd.read_csv("data/test_prep_long.csv")
-    df_train = pd.read_csv("data/train_prep_long.csv")
+    df_test = pd.read_csv("data/test_prep_order.csv")
+    df_train = pd.read_csv("data/train_prep_order.csv")
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
 
     # preprocess data
@@ -199,12 +199,12 @@ if __name__ == "__main__":
 
     # predicting columns of training set
     predictors = [c for c in df_train.columns if c not in ["prop_id","srch_id","booking_bool",\
-                                "click_bool","gross_bookings_usd","position", "category"]]
+                                "click_bool","gross_bookings_usd","position", "category", "visitor_hist_starrating", "visitor_hist_adr_usd"]]
     X_train = df_train[predictors]
     # X_train.drop(["srch_id", "prop_id"], axis=1, inplace=True)
 
     # predicting columns of test set
-    cols = [col for col in df_test.columns if col not in ['prop_id', 'srch_id']]
+    cols = [col for col in df_test.columns if col not in ['prop_id', 'srch_id', "visitor_hist_starrating", "visitor_hist_adr_usd"]]
     X_test = df_test[cols]
     # X_test.drop(["srch_id", "prop_id"], axis=1, inplace=True)
 
@@ -214,6 +214,6 @@ if __name__ == "__main__":
 
     """ functions """
     # create_model()
-    param_testing(X_train, y_train)
+    # param_testing(X_train, y_train)
     # model_testing(X_train, y_train)
-    # create_prediction(df_test, X_train, y_train, X_test)
+    create_prediction(df_test, X_train, y_train, X_test)
