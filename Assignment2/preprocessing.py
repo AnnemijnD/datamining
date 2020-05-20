@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -122,7 +123,6 @@ def add_searchorder(df):
                     rank of item in search)
         Args:
             df (pandas dataframe)
-
         Returns
             df (pandas dataframe )
     """
@@ -225,7 +225,6 @@ def fill_missing_val(df):
 
     """
     srch_query_affinity_score
-
     GEEN IDEE NOG OF DIT HANDIG IS..... ZE HEBBEN VAST MET EEN REDEN DE LOG GENOMEN?
     Zet ze nu weer om naar probabilities tussen 0 en 1, maar denk dat zij het hadden omgezet omdat
     je mega kleine waarden krijgt.... Weet niet hoe kut dat is?
@@ -278,66 +277,66 @@ def drop_cols(df, uninteresting):
     df.drop(uninteresting, axis=1, inplace=True)
 
     return df
-#
+
 # def combine_competitors(df):
-    """
-    Set all NULL values to 0
-    Combine
-    For rate: sum the rate of the competitors
-    For inv: set 0 if at least one of them is zero
-    For percentage: sum(rate * percentage) / rate
-        (if rate is zero then don't divide)
-    """
-    COMP = 8
-    rates_col, invs_col, perc_col = [], [], []
-    for index, row in df.iterrows():
-        rates, invs, percentages = [], [], []
-        for i in range(COMP):
-            rate = row[f"comp{i + 1}_rate"]
-            inv = row[f"comp{i + 1}_inv"]
-            percentage = row[f"comp{i + 1}_rate_percent_diff"]
-            if math.isnan(rate):
-                rate = 0
-            if math.isnan(inv):
-                inv = 0
-            if math.isnan(percentage):
-                percentage = 0
-            else:
-                percentage = rate * percentage
-            rates.append(rate)
-            invs.append(inv)
-            percentages.append(percentage)
-
-        percentage = sum(percentages)
-        rate = sum(rates)
-
-        # determine percentage based on rate
-        if rate < 0:
-            percentage /= - rate
-        elif rate > 0:
-            percentage /= rate
-
-        if 0 in invs:
-            inv = 0
-        else:
-            inv = 1
-
-        rates_col.append(rate)
-        invs_col.append(inv)
-        perc_col.append(percentage)
-
-    comp_cols = []
-    for i in range(COMP):
-        comp_cols.append(f"comp{i + 1}_rate")
-        comp_cols.append(f"comp{i + 1}_inv")
-        comp_cols.append(f"comp{i + 1}_rate_percent_diff")
-
-    df = df.drop(comp_cols, axis=1)
-    df["comp_rate"] = rates_col
-    df["comp_inv"] = invs_col
-    df["comp_perc"] = perc_col
-
-    return df
+#     """
+#     Set all NULL values to 0
+#     Combine
+#     For rate: sum the rate of the competitors
+#     For inv: set 0 if at least one of them is zero
+#     For percentage: sum(rate * percentage) / rate
+#         (if rate is zero then don't divide)
+#     """
+#     COMP = 8
+#     rates_col, invs_col, perc_col = [], [], []
+#     for index, row in df.iterrows():
+#         rates, invs, percentages = [], [], []
+#         for i in range(COMP):
+#             rate = row[f"comp{i + 1}_rate"]
+#             inv = row[f"comp{i + 1}_inv"]
+#             percentage = row[f"comp{i + 1}_rate_percent_diff"]
+#             if math.isnan(rate):
+#                 rate = 0
+#             if math.isnan(inv):
+#                 inv = 0
+#             if math.isnan(percentage):
+#                 percentage = 0
+#             else:
+#                 percentage = rate * percentage
+#             rates.append(rate)
+#             invs.append(inv)
+#             percentages.append(percentage)
+#
+#         percentage = sum(percentages)
+#         rate = sum(rates)
+#
+#         # determine percentage based on rate
+#         if rate < 0:
+#             percentage /= - rate
+#         elif rate > 0:
+#             percentage /= rate
+#
+#         if 0 in invs:
+#             inv = 0
+#         else:
+#             inv = 1
+#
+#         rates_col.append(rate)
+#         invs_col.append(inv)
+#         perc_col.append(percentage)
+#
+#     comp_cols = []
+#     for i in range(COMP):
+#         comp_cols.append(f"comp{i + 1}_rate")
+#         comp_cols.append(f"comp{i + 1}_inv")
+#         comp_cols.append(f"comp{i + 1}_rate_percent_diff")
+#
+#     df = df.drop(comp_cols, axis=1)
+#     df["comp_rate"] = rates_col
+#     df["comp_inv"] = invs_col
+#     df["comp_perc"] = perc_col
+#
+#     return df
 
 def combine_competitors2(df):
 
@@ -441,6 +440,48 @@ def prep_data(df, settype):
 
     return df
 
+
+def feature_extraction(df):
+
+
+    # DELETE THESE ROWS IF THE FUNCTION IS USED IN COMBINATION WITH FMV
+    df["visitor_hist_starrating"].fillna(-1, inplace=True)
+    df["visitor_hist_adr_usd"].fillna(-1, inplace=True)
+
+    """ star diff: absolute diff, all rows with null values in hist are -1 """
+
+    # get the absolute difference
+    star_diff = abs(df["visitor_hist_starrating"] - df["prop_starrating"])
+
+    # get the locations of the original null values
+    no_hist = df[df.visitor_hist_starrating == -1].index
+    star_diff.loc[no_hist] = -1
+
+    # combine the two dfs --> add the column
+    df = pd.concat([df, star_diff], axis=1)
+    df = df.rename(columns={0: "star_diff"})
+
+    """ price diff: absolute diff, all rows with null values in hist are -1 """
+    # get the absolute difference
+    price_diff = abs(df["visitor_hist_adr_usd"] - df["price_usd"])
+
+    # get the locations of the original null values
+    no_hist = df[df.visitor_hist_adr_usd == -1].index
+    price_diff.loc[no_hist] = -1
+
+    # combine the two dfs --> add the column
+    df = pd.concat([df, price_diff], axis=1)
+    df = df.rename(columns={0: "price_diff"})
+
+    """ book_prob """
+
+    # booking(prop_id) / counting(prop_id)
+    # number of times that prop_id was booked /number of times prop_id appeared in the data
+
+
+    """ click_prob """
+
+
 if __name__ == "__main__":
     shorten()
     quit()
@@ -450,7 +491,6 @@ if __name__ == "__main__":
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
     After that the preprocessed data will be saved in "preprocessed_train.csv"
     Make sure to delete the previous preprocessed file
-
     # TO AVOID MEMORY ERROR: run first 1 large and one small file, save the output
     of the large file, then switch and run again
     """

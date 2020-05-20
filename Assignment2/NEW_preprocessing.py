@@ -98,37 +98,41 @@ def missing_values(df):
     df["prop_review_score"].fillna(-1, inplace=True)
     df["prop_location_score1"].fillna(-1, inplace=True)
     df["prop_location_score2"].fillna(-1, inplace=True)
-    df["prop_starrating"].fillna(-1, inplace=True)
+    df["visitor_hist_starrating"].fillna(-1, inplace=True)
+    df["visitor_hist_adr_usd"].fillna(-1, inplace=True)
 
     # replace price by mean of hotels with same starrating
     mean_price_starrating = df.groupby("prop_starrating")["prop_log_historical_price"].transform("mean")
-    print("mean_price_starrating: ", mean_price_starrating) # ging mis denk ik, niet [1] nemen
     df["prop_log_historical_price"].fillna(mean_price_starrating, inplace=True)
 
     # fill by worst possible value in dataset
     aff_min = df["srch_query_affinity_score"].min()
-    print("srch_query_affinity_score: ", aff_min)
     df["srch_query_affinity_score"].fillna(aff_min, inplace=True)
 
+    # TODO: is dit worst???? hoezo is verder weg slechter?
     orig_max = df["orig_destination_distance"].max()
-    print("orig_destination_distance: ", orig_max)
     df["orig_destination_distance"].fillna(orig_max, inplace=True)
-
-    df["visitor_hist_starrating"].fillna(0, inplace=True)
-    df["visitor_hist_adr_usd"].fillna(0, inplace=True)
-
-    # duurt lang hier: print columns with missing values
 
     # remaining mv's are replaced by mean of column
     # df = df.fillna(df.mean())
+    print("er zijn nog zoveel nans: ", df.isnull().sum().sum())
 
     return df
 
 
 def price_star_diff(df):
-    # TODO: DIT KAN RAAR ZIJN? CHECKEN???
-    df["star_diff"] = df["visitor_hist_starrating"].fillna(df["visitor_hist_starrating"].mean()) - df["prop_starrating"].fillna(-10)
-    df["price_diff"] = df["visitor_hist_adr_usd"].fillna(df["visitor_hist_adr_usd"].mean()) - df["price_usd"].fillna(df["price_usd"].mean())
+    """
+    Calculate the absolute difference between respectively the starrating and
+    price and the history of the user.
+    If historical data is missing, the penalty is -1.
+    """
+    df["star_diff"] = abs(df["visitor_hist_starrating"] - df["prop_starrating"])
+    no_hist = df[df.visitor_hist_starrating == -1].index
+    df["star_diff"].loc[no_hist] = -1
+
+    df["price_diff"] = abs(df["visitor_hist_adr_usd"] - df["price_usd"])
+    no_hist = df[df.visitor_hist_adr_usd == -1].index
+    df["price_diff"].loc[no_hist] = -1
     return df
 
 
@@ -200,16 +204,16 @@ def prep_data(df, datatype):
     print("(2/6) competitors: ", np.round((time.time() - start) / 60, 2), "min")
 
     start = time.time()
-    df = price_star_diff(df) # mss na missing values
-    print("(3/6) price and star difference: ", np.round((time.time() - start) / 60, 2), "min")
-
-    start = time.time()
     df = seasonality(df)
-    print("(4/6) seasons: ", np.round((time.time() - start) / 60, 2), "min")
+    print("(3/6) seasons: ", np.round((time.time() - start)*1000 / 60, 2), "min")
 
     start = time.time()
     df = missing_values(df)
-    print("(5/6) missing values: ", np.round((time.time() - start) / 60, 2), "min")
+    print("(4/6) missing values: ", np.round((time.time() - start)*1000 / 60, 2), "min")
+
+    start = time.time()
+    df = price_star_diff(df)
+    print("(5/6) price and star difference: ", np.round((time.time() - start)*1000 / 60, 2), "min")
 
     start = time.time()
     df = scale(df)
@@ -244,15 +248,14 @@ if __name__ == "__main__":
 
     datatypes = ["training", "test"]
 
-    # datatypes = ["test"]
 
     for datatype in datatypes:
 
-        save_filepath = f"data/{datatype}_prep_new1.csv"
+        save_filepath = f"data/{datatype}_prep_newTEST.csv"
 
         start = time.time()
-        open_filepath = f"data/{datatype}_set_VU_DM.csv"
-        # open_filepath = f"data/{datatype}_short.csv"
+        # open_filepath = f"data/{datatype}_set_VU_DM.csv"
+        open_filepath = f"data/{datatype}_short.csv"
 
 
         print(f"\n\nset {datatype.upper()} from file {open_filepath} preprocessed and saved in {save_filepath}\n")
