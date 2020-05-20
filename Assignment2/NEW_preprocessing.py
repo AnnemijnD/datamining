@@ -90,15 +90,50 @@ def stats(df):
     # add rank
     df["rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
 
+
+    # add means
+    strings = ["srch_id", "prop_id", "loc"]
+
+    for str in strings:
+        if str == "loc":
+            key = "prop_country_id"
+        else:
+            key = str
+
+        str = "_" + str
+
+        df[f"mean_price_usd{str}"] = df.groupby(key)["price_usd"].transform('mean')
+
+        if not str == "prop_id":
+
+            df[f"mean_prop_starrating{str}"] = df.groupby(key)["prop_starrating"].transform('mean')
+            df[f"mean_prop_review_score{str}"] = df.groupby(key)["prop_review_score"].transform('mean')
+            df[f"mean_prop_location_score1{str}"] = df.groupby(key)["prop_location_score1"].transform('mean')
+            df[f"mean_prop_location_score2{str}"] = df.groupby(key)["prop_location_score2"].transform('mean')
+            df[f"mean_prop_log_historical_price{str}"] = df.groupby(key)["prop_log_historical_price"].transform('mean')
+
+        if not str=="srch_id":
+            df[f"mean_srch_length_of_stay{str}"] = df.groupby(key)["srch_length_of_stay"].transform('mean')
+            df[f"mean_srch_booking_window{str}"] = df.groupby(key)["srch_booking_window"].transform('mean')
+            df[f"mean_srch_adults_count{str}"] = df.groupby(key)["srch_adults_count"].transform('mean')
+            df[f"mean_srch_children_count{str}"] = df.groupby(key)["srch_children_count"].transform('mean')
+            df[f"mean_srch_room_count{str}"] = df.groupby(key)["srch_room_count"].transform('mean')
+            df[f"mean_srch_query_affinity_score{str}"] = df.groupby(key)["srch_query_affinity_score"].transform('mean')
+            df[f"mean_orig_destination_distance{str}"] = df.groupby(key)["orig_destination_distance"].transform('mean')
+
+        # + 27 cols
+
     # add counts
-    df['n_booked'] = df.groupby('prop_id')['prop_id'].transform('count')
-    df['n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
+    df[f'n_props_srch'] = df.groupby('srch_id')['prop_id'].transform('count')
+    df[f'n_props_loc'] = df.groupby("prop_country_id")['prop_id'].transform('count')
+    df[f'n_srchitems_loc'] = df.groupby("prop_country_id")['srch_id'].transform('count')
+    df[f'n_srchitems'] = df.groupby('srch_id')['srch_id'].transform('count')
+    df[f'n_srchitems_prop'] = df.groupby('prop_id')['srch_id'].transform('count')
+    df[f"freq_country"] = df.groupby("prop_country_id")['prop_country_id'].transform('count')
+    df[f"freq_prop"] = df.groupby("prop_id")['prop_id'].transform('count')
 
-    # add mean
+    # + 7 cols
 
-
-
-    print(df.head())
     return df
 
 
@@ -213,7 +248,7 @@ def prep_data(df, datatype):
     if datatype == "training":
         df = drop_cols(df, "gross_bookings_usd")
         df = add_category(df)
-        df = get_train_data(df)
+        # df = get_train_data(df)
 
     df = stats(df)
     print("(1/6 - train only) add categories and downsample train data: ", np.round((time.time() - start)*1000 / 60, 2), "min")
@@ -289,7 +324,7 @@ if __name__ == "__main__":
 
         # save preprocessed data
         print("\ntotal time: ", np.round((time.time() - start) / 60, 2))
-        df.to_csv(save_filepath)
+        # df.to_csv(save_filepath)
 
         # df.sample(n=10000).to_csv("data/test_TESTTEST.csv", index=False)
 
