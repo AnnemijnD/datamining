@@ -158,6 +158,47 @@ def scale(df):
     return df
 
 
+def feature_extraction(df):
+
+
+    # DELETE THESE ROWS IF THE FUNCTION IS USED IN COMBINATION WITH FMV
+    df["visitor_hist_starrating"].fillna(-1, inplace=True)
+    df["visitor_hist_adr_usd"].fillna(-1, inplace=True)
+
+    """ star diff: absolute diff, all rows with null values in hist are -1 """
+
+    # get the absolute difference
+    star_diff = abs(df["visitor_hist_starrating"] - df["prop_starrating"])
+
+    # get the locations of the original null values
+    no_hist = df[df.visitor_hist_starrating == -1].index
+    star_diff.loc[no_hist] = -1
+
+    # combine the two dfs --> add the column
+    df = pd.concat([df, star_diff], axis=1)
+    df = df.rename(columns={0: "star_diff"})
+
+    """ price diff: absolute diff, all rows with null values in hist are -1 """
+    # get the absolute difference
+    price_diff = abs(df["visitor_hist_adr_usd"] - df["price_usd"])
+
+    # get the locations of the original null values
+    no_hist = df[df.visitor_hist_adr_usd == -1].index
+    price_diff.loc[no_hist] = -1
+
+    # combine the two dfs --> add the column
+    df = pd.concat([df, price_diff], axis=1)
+    df = df.rename(columns={0: "price_diff"})
+
+    """ book_prob """
+
+    # booking(prop_id) / counting(prop_id)
+    # number of times that prop_id was booked /number of times prop_id appeared in the data
+
+
+    """ click_prob """
+
+
 def prep_data(df, datatype):
     """
     Call all preprocessing functions for training and test set.
