@@ -51,14 +51,14 @@ def shorten():
     # df_train = pd.read_csv("data/training_set_VU_DM.csv")
     # df_train = pd.read_csv("data/train_selection.csv")
     # df_test = pd.read_csv("data/test_set_VU_DM.csv")
-    df_train = pd.read_csv("data/train_prep_long3-all.csv")
-    df_test = pd.read_csv("data/test_prep_long3-all.csv")
+    df_train = pd.read_csv("data/train_prep_long.csv")
+    df_test = pd.read_csv("data/test_prep_long.csv")
     # df = pd.read_csv("results/solutions/xgboost_2020-05-17-21-02.csv")
     # print(df_train.head(10))
     # print(df_test.head(10))
 
-    df_train.sample(n=1000).to_csv("data/train_prep3_short.csv", index=False)
-    df_test.sample(n=1000).to_csv("data/test_prep3_short.csv", index=False)
+    df_train.sample(n=1000).to_csv("data/train_prep_short1.csv", index=False)
+    df_test.sample(n=1000).to_csv("data/test_prep_short1.csv", index=False)
     # df.sample(n=1000).to_csv("data/xg_short.csv", index=False)
 
 def overview(data):
@@ -390,7 +390,7 @@ def combine_competitors2(df):
 
     return df
 
-#
+
 def prep_data(df, settype):
     """
     Call all preprocessing functions for training and test set.
@@ -408,67 +408,16 @@ def prep_data(df, settype):
 
 
     time1 = time.time()
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
-<<<<<<< HEAD
-    df_train = drop_cols(df_train, uninteresting)
-    uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
-    df_test = drop_cols(df_test, uninteresting)
-    time2 = time.time()
-    print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(2/6) columns dropped\n")
+    if settype == "train":
+        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id", "gross_bookings_usd"]
+    else:
+        uninteresting = ["srch_adults_count", "srch_children_count", "srch_room_count", "date_time", "site_id"]
 
-    time1 = time.time()
-    df_train = add_searchorder(df_train)
-    df_test = add_searchorder(df_test)
-    time2 = time.time()
-    print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(3/6) search order added\n")
-
-    # time1 = time.time()
-    # df_train = combine_competitors(df_train)
-    # df_test = combine_competitors(df_test)
-    # # print("skip competitors")
-    # time2 = time.time()
-    # print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    # print("(4/6) competitors combined\n")
-
-    numeric_train, categorical_train = overview(df_train)
-    # print(numeric_train)
-    numeric_test, categorical_test = overview(df_test)
-    # print(numeric_test)
-
-    # avoid scaling of boolean variables and important id's
-    for var in ['random_bool', "prop_brand_bool", "promotion_flag", 'srch_saturday_night_bool', "srch_id", "prop_id"]:
-        numeric_train.remove(var)
-        numeric_test.remove(var)
-
-    # do not scale category for NDCG function!
-    numeric_train.remove("category")
-
-    time1 = time.time()
-    # df_train = missing_values(df_train)
-    # df_test = missing_values(df_test)
-    df_train = fill_missing_val(df_train)
-    df_test = fill_missing_val(df_test)
-    time2 = time.time()
-    print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(5/6) missing values imputed\n")
-
-    time1 = time.time()
-    df_train = scale(df_train, numeric_train)
-    df_test = scale(df_test, numeric_test)
-    time2 = time.time()
-    print("preprocessing took ", (time2-time1)*1000.0, " ms")
-    print("(6/6) numerical variables scaled\n")
-
-
-    return df_train, df_test
-=======
     df = drop_cols(df, uninteresting)
     print("door drop cols:", time.time() - start)
 
 
-    df = add_searchorder(df)
+    # df = add_searchorder(df)
     print("door de eerste search order:", time.time() - start)
 
     # df = missing_values(df)
@@ -489,17 +438,13 @@ def prep_data(df, settype):
 
     df = scale(df, numeric)
     print("door de scaling:", time.time() - start)
->>>>>>> fe4a16f6af500c9a1d9e375c4b8e73a5bd5eb1a9
 
     return df
 
 if __name__ == "__main__":
-
-<<<<<<< HEAD
     shorten()
     quit()
-=======
->>>>>>> fe4a16f6af500c9a1d9e375c4b8e73a5bd5eb1a9
+
     """
     RUN THIS FILE ONCE FOR train_selection AND FOR test_category
     WHEN FUNCTIONS ARE SPECIFIC FOR TRAIN OR TEST SPECIFY THIS!
@@ -511,51 +456,14 @@ if __name__ == "__main__":
     """
     print("\nSTART PREPROCESSING DATA\n")
 
-<<<<<<< HEAD
-    # load data to preprocess
-
-    #
-    # test_test = pd.read_csv("data/test_prep_long2-nocomp-rank.csv")
-    # test_traint = pd.read_csv("data/train_prep_long2-nocomp-rank.csv")
-    # print(test_test.shape)
-    # print(test_train.shape)
-    # quit()
-    print("data loaded successfully\n")
-    # print(df_train.head())
-    # print(df_train.shape)
-
-    for set in ["train", "test"]:
-        if set == "train":
-            df_train = pd.read_csv("data/training_set_VU_DM.csv")
-            df_test = pd.read_csv("data/test_short.csv")
-        elif set == "test":
-            df_train = pd.read_csv("data/training_short.csv")
-            df_test = pd.read_csv("data/test_set_VU_DM.csv")
-
-
-        time1 = time.time()
-        print("preprocessing data")
-        df_train, df_test = prep_data(df_train, df_test)
-        print("preprocessing successful\n")
-        # print(df_train.head())
-        # print(df_test.head())
-        time2 = time.time()
-        print("preprocessing took ", (time2-time1)*1000.0, " ms")
-        # print(df_train.head())
-        print(df_train.shape)
-
-        if set == "train":
-            df_train.to_csv("data/train_prep_long3-all.csv", index=False)
-        elif set == "test":
-            df_test.to_csv("data/test_prep_long3-all.csv", index=False)
-=======
     settype = None
     while not(settype == "train" or settype == "test"):
         # settype = input("train or test:").lower()
-        settype = "train"
+        settype = "test"
 
-    save_filepath = f"data/{settype}_preprocessed.csv"
-    open_filepath = "data/fake_data/training_fake.csv"
+    save_filepath = f"data/{settype}_prep-norank-mvs2.csv"
+    # open_filepath = "data/training_set_VU_DM.csv"
+    open_filepath = "data/test_set_VU_DM.csv"
     print("HOI LEES JE DIT WEL LEZEN HE!!!!\n")
     print(f"set {settype.upper()} from file {open_filepath} preprocessed and saved in {save_filepath}\n")
 
@@ -565,4 +473,3 @@ if __name__ == "__main__":
     df = prep_data(df, settype)
 
     df.to_csv(save_filepath)
->>>>>>> fe4a16f6af500c9a1d9e375c4b8e73a5bd5eb1a9
