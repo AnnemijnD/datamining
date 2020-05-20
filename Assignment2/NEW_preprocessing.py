@@ -130,6 +130,7 @@ def stats(df):
 
     # add rank
     df["rank"] = df.groupby("srch_id")["srch_id"].rank("first", ascending=True)
+    df["price_rank_srch"] = df.groupby("srch_id")["price_usd"].rank("first", ascending=True)
 
 
     # add means
